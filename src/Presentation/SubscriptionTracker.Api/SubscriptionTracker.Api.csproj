@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\SubscriptionTracker.Infrastructure\SubscriptionTracker.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Core\SubscriptionTracker.Application\SubscriptionTracker.Application.csproj" />
+  </ItemGroup>
+
+</Project>

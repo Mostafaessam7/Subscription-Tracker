@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Angular / Node
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+## Environment / secrets
+*.env
+appsettings.*.local.json
+**/appsettings.Development.json
+!**/appsettings.Development.json.example
+
+## Logs
+logs/
+*.log
+
+## OS
+.DS_Store
+Thumbs.db
+
+## IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+## EF Core
+*.mdf
+*.ldf
