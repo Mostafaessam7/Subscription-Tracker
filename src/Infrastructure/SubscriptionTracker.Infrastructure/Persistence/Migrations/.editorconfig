@@ -1,0 +1,4 @@
+# EF Core-generated migration files are not hand-maintained; disable code analysis for this folder.
+[*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
