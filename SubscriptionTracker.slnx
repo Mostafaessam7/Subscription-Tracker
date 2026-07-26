@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="src/Core/SubscriptionTracker.Application/SubscriptionTracker.Application.csproj" />
+    <Project Path="src/Core/SubscriptionTracker.Domain/SubscriptionTracker.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="src/Infrastructure/SubscriptionTracker.Infrastructure/SubscriptionTracker.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/SubscriptionTracker.Api/SubscriptionTracker.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SubscriptionTracker.Api.IntegrationTests/SubscriptionTracker.Api.IntegrationTests.csproj" />
+    <Project Path="tests/SubscriptionTracker.Application.UnitTests/SubscriptionTracker.Application.UnitTests.csproj" />
+    <Project Path="tests/SubscriptionTracker.Domain.UnitTests/SubscriptionTracker.Domain.UnitTests.csproj" />
+  </Folder>
+</Solution>
