@@ -9,7 +9,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
-    <NoWarn>CA1848;CA2007</NoWarn>
+    <!-- CA1716: 'Error'/'New' etc. as type/member names is idiomatic for the Result pattern used throughout this codebase -->
+    <NoWarn>CA1848;CA2007;CA1716</NoWarn>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Deterministic>true</Deterministic>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
