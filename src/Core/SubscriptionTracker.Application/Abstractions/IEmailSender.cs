@@ -10,4 +10,8 @@ public interface IEmailSender
 
     Task SendRenewalReminderAsync(
         string toEmail, string recipientName, string subscriptionName, DateOnly renewalDate, CancellationToken cancellationToken = default);
+
+    Task SendBudgetOverspendAlertAsync(
+        string toEmail, string recipientName, string budgetName, decimal spentAmount, decimal budgetAmount, string currencyCode,
+        CancellationToken cancellationToken = default);
 }
