@@ -1,8 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { CatalogService } from '../../../core/services/catalog.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { Subscription, SubscriptionStatus } from '../../../core/models/subscription.models';
+import { Category, PaymentMethod, Tag } from '../../../core/models/catalog.models';
 
 @Component({
   selector: 'app-subscription-detail',
@@ -15,6 +17,7 @@ export class SubscriptionDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly subscriptionService = inject(SubscriptionService);
+  private readonly catalogService = inject(CatalogService);
 
   protected readonly SubscriptionStatus = SubscriptionStatus;
 
@@ -23,10 +26,34 @@ export class SubscriptionDetail implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly isActionInProgress = signal(false);
 
+  private readonly categories = signal<Category[]>([]);
+  private readonly paymentMethods = signal<PaymentMethod[]>([]);
+  private readonly tags = signal<Tag[]>([]);
+
+  readonly categoryName = computed(() => {
+    const categoryId = this.subscription()?.categoryId;
+    return this.categories().find((c) => c.id === categoryId)?.name ?? null;
+  });
+
+  readonly paymentMethodLabel = computed(() => {
+    const paymentMethodId = this.subscription()?.paymentMethodId;
+    return this.paymentMethods().find((p) => p.id === paymentMethodId)?.label ?? null;
+  });
+
+  readonly tagNames = computed(() => {
+    const tagIds = this.subscription()?.tagIds ?? [];
+    return this.tags()
+      .filter((t) => tagIds.includes(t.id))
+      .map((t) => t.name);
+  });
+
   private id!: string;
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id')!;
+    this.catalogService.getCategories().subscribe({ next: (c) => this.categories.set(c) });
+    this.catalogService.getPaymentMethods().subscribe({ next: (p) => this.paymentMethods.set(p) });
+    this.catalogService.getTags().subscribe({ next: (t) => this.tags.set(t) });
     this.load();
   }
 
