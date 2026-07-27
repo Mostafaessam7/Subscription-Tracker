@@ -47,13 +47,13 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
             .WithOne()
             .HasForeignKey(r => r.SubscriptionId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.Navigation(s => s.RenewalHistory).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(s => s.RenewalHistory).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
         builder.HasMany(s => s.Attachments)
             .WithOne()
             .HasForeignKey(a => a.SubscriptionId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.Navigation(s => s.Attachments).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(s => s.Attachments).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
         builder.HasIndex(s => s.WorkspaceId);
         builder.HasIndex(s => s.OwnerId);

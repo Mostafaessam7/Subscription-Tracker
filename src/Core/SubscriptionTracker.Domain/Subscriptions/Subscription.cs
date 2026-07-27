@@ -9,9 +9,11 @@ public sealed class Subscription : AuditableAggregateRoot<Guid>
 {
     private readonly List<RenewalHistoryEntry> _renewalHistory = [];
     private readonly List<SubscriptionAttachment> _attachments = [];
-    private readonly HashSet<Guid> _tagIds = [];
-    private readonly HashSet<Guid> _sharedUserIds = [];
-    private readonly SortedSet<int> _reminderDaysBeforeRenewal = new() { 3, 7 };
+    // EF Core's primitive-collection value comparer requires an ordered IList<T>, so these are Lists
+    // with manual deduplication rather than HashSet/SortedSet, even though they are semantically sets.
+    private readonly List<Guid> _tagIds = [];
+    private readonly List<Guid> _sharedUserIds = [];
+    private readonly List<int> _reminderDaysBeforeRenewal = [3, 7];
 
     private Subscription(
         Guid id,
@@ -143,11 +145,23 @@ public sealed class Subscription : AuditableAggregateRoot<Guid>
 
     public void DisableAutoRenewal() => AutoRenewal = false;
 
-    public void AddTag(Guid tagId) => _tagIds.Add(tagId);
+    public void AddTag(Guid tagId)
+    {
+        if (!_tagIds.Contains(tagId))
+        {
+            _tagIds.Add(tagId);
+        }
+    }
 
     public void RemoveTag(Guid tagId) => _tagIds.Remove(tagId);
 
-    public void ShareWith(Guid userId) => _sharedUserIds.Add(userId);
+    public void ShareWith(Guid userId)
+    {
+        if (!_sharedUserIds.Contains(userId))
+        {
+            _sharedUserIds.Add(userId);
+        }
+    }
 
     public void Unshare(Guid userId) => _sharedUserIds.Remove(userId);
 
@@ -161,11 +175,10 @@ public sealed class Subscription : AuditableAggregateRoot<Guid>
                 Error.Validation("Subscription.InvalidReminderDay", "Reminder days must be positive integers."));
         }
 
+        distinctDays.Sort();
+
         _reminderDaysBeforeRenewal.Clear();
-        foreach (var day in distinctDays)
-        {
-            _reminderDaysBeforeRenewal.Add(day);
-        }
+        _reminderDaysBeforeRenewal.AddRange(distinctDays);
 
         return Result.Success();
     }
