@@ -1,10 +1,12 @@
 using Asp.Versioning.ApiExplorer;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SubscriptionTracker.Api;
 using SubscriptionTracker.Application;
 using SubscriptionTracker.Infrastructure;
+using SubscriptionTracker.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration);
 
 var app = builder.Build();
+
+if (builder.Configuration.GetValue("ApplyMigrationsOnStartup", defaultValue: true))
+{
+    using var migrationScope = app.Services.CreateScope();
+    var dbContext = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.UseExceptionHandler();
 

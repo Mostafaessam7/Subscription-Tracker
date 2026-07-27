@@ -2,7 +2,7 @@
 
 **Read this file first if you are a new session continuing this project.** It contains everything needed to resume without re-deriving context.
 
-Last updated: 2026-07-27, after Milestone 6.
+Last updated: 2026-07-27, after Milestone 8.
 
 ## 1. What this project is
 
@@ -14,9 +14,9 @@ An enterprise-grade Subscription Tracker SaaS: .NET 10 Web API backend (Clean Ar
 - Don't ask for approval after every milestone; continue automatically. Only stop for a real blocker or an architectural decision that needs the user's input.
 - At the end of each milestone: report what was implemented, files touched, build status, test status, blockers — then continue.
 
-## 2. Current state (end of Milestone 6)
+## 2. Current state (end of Milestone 8)
 
-**Milestones 1–6 are complete and committed.** Milestones 7–10 are not started. See `TaskList` in this session's harness — if it's not visible to you (new session), the 10-milestone list is reconstructed below in §6.
+**Milestones 1–8 are complete and committed.** Milestones 9–10 (Angular frontend) are not started. See `TaskList` in this session's harness — if it's not visible to you (new session), the 10-milestone list is reconstructed below in §6.
 
 The app has been **run end-to-end against a real SQL Server LocalDB instance** (not just unit-tested): register → login → create subscription → list subscriptions → cancel subscription → change password → re-login all verified working via `curl`. An automated `WebApplicationFactory`-based integration test locks in this flow (`tests/SubscriptionTracker.Api.IntegrationTests/AuthAndSubscriptionsFlowTests.cs`).
 
@@ -27,6 +27,8 @@ The app has been **run end-to-end against a real SQL Server LocalDB instance** (
 ### Git history
 
 ```
+(HEAD) feat: add Docker support (Dockerfile, docker-compose, .env.example)
+feat: add Quartz.NET background jobs for renewals, expiry, and budget alerts
 7bf387a feat: add API layer (JWT auth, permissions, versioning, Swagger, middleware)
 7bd9abf feat: add Application layer CQRS (Identity + Subscriptions vertical slices)
 3594e80 feat: add EF Core persistence layer (SQL Server)
@@ -123,6 +125,27 @@ CQRS via MediatR 12.4.1 (pinned — **do not upgrade past 12.x**, v13+ requires 
 
 **Not yet built**: controllers for Category/Tag/PaymentMethod/Budget/Workspace management, session management endpoints, 2FA endpoints (domain has the flags — `User.EnableTwoFactor`/`DisableTwoFactor` — but no TOTP generation/validation or API surface yet).
 
+### Background jobs (src/Infrastructure/SubscriptionTracker.Infrastructure/BackgroundJobs)
+
+Quartz.NET, RAM job store (non-clustered — fine for a single instance; switch to a persistent job store if you ever run multiple API replicas, so triggers don't duplicate-fire). Four daily jobs, staggered 15 minutes apart starting 06:00 UTC:
+
+- `RenewalReminderJob` (06:00) — emails owners when `NextRenewalDate - today` matches one of the subscription's `ReminderDaysBeforeRenewal` values. No separate "already sent" tracking table — relies on the date match only occurring once per day per threshold, which is correct as long as the job actually runs daily without gaps.
+- `AutoRenewalJob` (06:15) — calls `Subscription.Renew()` for active, auto-renewing subscriptions past their `NextRenewalDate`.
+- `ExpireSubscriptionsJob` (06:30) — calls `Subscription.MarkExpiredIfPastRenewalDate()` for non-auto-renewing subscriptions past their date.
+- `BudgetAlertJob` (06:45) — estimates each budget's current recurring spend by normalizing every matching subscription's billing cycle to the budget's period (monthly/yearly annualized-then-divided), compares against `Budget.HasExceededThreshold`, emails the workspace owner if crossed. Only sums subscriptions in the *same currency* as the budget — no FX conversion exists in this codebase.
+
+Verified: Quartz scheduler initializes and registers all four jobs/triggers without error at API startup (checked via `dotnet run` + log inspection). **Not verified**: actually triggering a job and observing its output, since that requires either waiting for the cron time or temporarily editing the schedule — the query logic mirrors patterns already proven end-to-end in `GetSubscriptionsQueryHandler`, and the mutating logic (`Renew()`, `MarkExpiredIfPastRenewalDate()`) is covered by the 45 domain unit tests, but the jobs themselves have no dedicated test coverage. If you touch this code, consider adding a quick manual trigger (temporarily change a cron expression to fire in ~1 minute, run the app, check logs, revert) before trusting it.
+
+### Docker (repo root)
+
+`Dockerfile` lives at `src/Presentation/SubscriptionTracker.Api/Dockerfile` but its **build context must be the repo root** (it copies `Directory.Build.props`/`Directory.Packages.props`/the `.slnx` from root, then each project by relative path, for proper Docker layer caching on `dotnet restore`). `docker-compose.yml` at the repo root already sets `build.context: .` and `build.dockerfile: src/Presentation/SubscriptionTracker.Api/Dockerfile` correctly — if you ever run `docker build` by hand instead of via compose, remember `-f src/Presentation/SubscriptionTracker.Api/Dockerfile .` (context `.`, not the Api folder).
+
+`docker-compose.yml` brings up SQL Server 2022 (Express edition, `MSSQL_SA_PASSWORD` required) + the API, wired together with a healthcheck-gated `depends_on` so the API doesn't start until SQL Server responds to `sqlcmd`. Config is injected via env vars using ASP.NET Core's `__` double-underscore section-separator convention (`ConnectionStrings__SubscriptionTrackerDb`, `Jwt__SigningKey`, `Smtp__*`). Copy `.env.example` to `.env` and fill in real values before `docker compose up` — `.env` is gitignored.
+
+The API now applies pending EF Core migrations automatically at startup (`Program.cs`, gated by config key `ApplyMigrationsOnStartup`, default `true`) — added specifically so a fresh `docker compose up` gets a working schema without a separate migration step. Set `ApplyMigrationsOnStartup=false` if you ever move to a controlled/separate migration pipeline (e.g. multi-replica deployments where you don't want every instance racing to apply migrations on boot).
+
+**⚠️ Not build-tested.** Docker is not installed in this environment (checked both the sandboxed Bash tool and the PowerShell host — neither has a `docker` binary), so the Dockerfile/compose file were written carefully by hand-tracing the actual project structure and dependency graph, but **have never actually been run through `docker build`/`docker compose up`**. Before relying on these in any real deployment, run `docker compose up --build` yourself and fix whatever surfaces — given how many subtle bugs turned up when *this* codebase was actually run against a live database (see §5), do not assume the Docker files are bug-free just because they look right on paper. The non-root `appuser` in the runtime image may need explicit write permission if you add file-based logging or local attachment storage (Serilog's file sink is currently configured to write to `logs/` relative to the working directory — verify that's writable by `appuser` in the container, or redirect it to a mounted volume).
+
 ## 5. Bugs found and fixed this session (read before touching related code)
 
 These were caught by actually running the app against a live database, not by unit tests (the unit tests all passed while these bugs were live — a reminder that mocked-repository tests don't catch EF Core mapping/query issues). If you're implementing new aggregates/collections/domain events, watch for the same three classes of bug:
@@ -149,9 +172,9 @@ Original 10-milestone plan, for reference:
 4. ✅ EF Core persistence layer
 5. ✅ Application layer CQRS
 6. ✅ API layer (auth, versioning, Swagger, middleware)
-7. ⬜ **Background jobs & notifications** — Quartz.NET is already referenced (Infrastructure csproj has `Quartz.Extensions.Hosting`) but **not wired up**. Need: a scheduled job that scans `Subscriptions` for `NextRenewalDate` within each subscription's `ReminderDaysBeforeRenewal` window and sends a reminder via `IEmailSender.SendRenewalReminderAsync` (already implemented and ready to call); a job to auto-run `Subscription.Renew()` for subscriptions with `AutoRenewal=true` whose `NextRenewalDate` has passed; a job to call `Subscription.MarkExpiredIfPastRenewalDate()` for non-auto-renewing subscriptions past their date (this domain method already exists but nothing calls it yet). Consider whether renewal reminders should be domain-event-driven (raise an event, handle via `INotificationHandler<DomainEventNotification<...>>`) vs. a periodic Quartz scan — a periodic scan is almost certainly right here since "3 days before renewal" is date-elapsing, not state-transition-triggered.
-8. ⬜ **Docker support** — Dockerfile for the API (multi-stage build), docker-compose with SQL Server + API + (eventually) Angular, healthcheck directives referencing `/health/ready`.
-9. ⬜ **Angular frontend scaffold** — standalone components, routing, lazy loading, auth interceptor (attach JWT, handle 401 → refresh-token flow), route guards, core layout, dark/light theme, i18n scaffolding for English/Arabic with RTL.
+7. ✅ Background jobs & notifications (Quartz.NET — see §4 "Background jobs" above)
+8. ✅ Docker support (Dockerfile + docker-compose — see §4 "Docker" above; **not build-tested**, no Docker available in this environment)
+9. ⬜ **Angular frontend scaffold** — standalone components, routing, lazy loading, auth interceptor (attach JWT, handle 401 → refresh-token flow), route guards, core layout, dark/light theme, i18n scaffolding for English/Arabic with RTL. The API's email links already point to specific frontend routes (`/auth/verify-email?userId=...&token=...`, `/auth/reset-password?userId=...&token=...`) — those routes must exist with those exact query param names.
 10. ⬜ **Angular features** — Auth pages (login/register/verify-email/forgot-password/reset-password — the API's email links point to `{FrontendBaseUrl}/auth/verify-email?userId=...&token=...` and `/auth/reset-password?userId=...&token=...`, so those exact routes need to exist), Dashboard (KPI cards, charts, upcoming renewals), Subscriptions list/detail/create/edit with filtering, Reports.
 
 Also still outstanding from the original spec, not yet slotted into a milestone — fold into whichever milestone makes sense as you go:
@@ -164,7 +187,7 @@ Also still outstanding from the original spec, not yet slotted into a milestone 
 
 ## 7. Known non-blocking gaps
 
-- No `docker-compose.yml` / `Dockerfile` yet (Milestone 8).
+- Docker files exist but are unverified — see §4 "Docker" caveat above. Run `docker compose up --build` and fix what breaks before trusting them.
 - `Jwt:SigningKey` in `appsettings.Development.json` is a placeholder string — fine for local dev, **must** come from environment variable / secret manager in any real deployment (appsettings.Production.json is gitignored for exactly this reason).
 - OpenTelemetry is wired up but has no exporter destination configured (no OTLP collector endpoint in appsettings) — traces/metrics are collected in-process but not shipped anywhere yet.
 - `RegisterUserCommandHandler` returns `200 OK` (via `ToActionResult`), not `201 Created` — acceptable (there's no natural "GetUserById" endpoint to `CreatedAtAction` against yet), but worth a second look once a user-profile GET endpoint exists.

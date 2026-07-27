@@ -1,0 +1,47 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: subscriptiontracker-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in a .env file or the environment}
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Presentation/SubscriptionTracker.Api/Dockerfile
+    container_name: subscriptiontracker-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__SubscriptionTrackerDb: "Server=sqlserver;Database=SubscriptionTracker;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Jwt__Issuer: SubscriptionTracker
+      Jwt__Audience: SubscriptionTracker.Clients
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in a .env file or the environment (32+ chars)}
+      Jwt__AccessTokenLifetimeMinutes: "15"
+      Smtp__Host: ${SMTP_HOST:-}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-no-reply@subscriptiontracker.app}
+      Smtp__FrontendBaseUrl: ${FRONTEND_BASE_URL:-http://localhost:4200}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
