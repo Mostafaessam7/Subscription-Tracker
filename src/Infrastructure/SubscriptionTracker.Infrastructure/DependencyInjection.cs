@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Domain.Common;
+using SubscriptionTracker.Infrastructure.BackgroundJobs;
 using SubscriptionTracker.Infrastructure.Notifications;
 using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Interceptors;
@@ -46,6 +48,32 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
 
+        AddBackgroundJobs(services);
+
         return services;
+    }
+
+    private static void AddBackgroundJobs(IServiceCollection services)
+    {
+        services.AddQuartz(quartz =>
+        {
+            AddDailyJob<RenewalReminderJob>(quartz, "renewal-reminder", "0 0 6 * * ?");
+            AddDailyJob<AutoRenewalJob>(quartz, "auto-renewal", "0 15 6 * * ?");
+            AddDailyJob<ExpireSubscriptionsJob>(quartz, "expire-subscriptions", "0 30 6 * * ?");
+            AddDailyJob<BudgetAlertJob>(quartz, "budget-alert", "0 45 6 * * ?");
+        });
+
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+    }
+
+    private static void AddDailyJob<TJob>(IServiceCollectionQuartzConfigurator quartz, string name, string cronExpression)
+        where TJob : IJob
+    {
+        var jobKey = new JobKey(name);
+        quartz.AddJob<TJob>(opts => opts.WithIdentity(jobKey));
+        quartz.AddTrigger(opts => opts
+            .ForJob(jobKey)
+            .WithIdentity($"{name}-trigger")
+            .WithCronSchedule(cronExpression));
     }
 }

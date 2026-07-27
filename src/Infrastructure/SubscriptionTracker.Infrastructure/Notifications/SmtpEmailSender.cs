@@ -53,6 +53,22 @@ public sealed class SmtpEmailSender(IOptions<SmtpOptions> options, ILogger<SmtpE
         return SendAsync(toEmail, $"Upcoming renewal: {subscriptionName}", body, cancellationToken);
     }
 
+    public Task SendBudgetOverspendAlertAsync(
+        string toEmail, string recipientName, string budgetName, decimal spentAmount, decimal budgetAmount, string currencyCode,
+        CancellationToken cancellationToken = default)
+    {
+        var percentage = budgetAmount == 0 ? 0 : Math.Round(spentAmount / budgetAmount * 100m, 1);
+
+        var body = $"""
+            <p>Hi {recipientName},</p>
+            <p>Your budget <strong>{budgetName}</strong> has reached <strong>{percentage}%</strong> of its limit:
+            {spentAmount:0.00} {currencyCode} spent of {budgetAmount:0.00} {currencyCode}.</p>
+            <p>Log in to Subscription Tracker to review your spending.</p>
+            """;
+
+        return SendAsync(toEmail, $"Budget alert: {budgetName}", body, cancellationToken);
+    }
+
     private async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_options.Host))
