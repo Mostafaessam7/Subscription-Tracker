@@ -29,12 +29,30 @@ public static class DependencyInjection
 
         AddJwtAuthentication(services, configuration);
         AddApiVersioningAndSwagger(services);
+        AddCors(services, configuration);
         AddRateLimiting(services);
         AddResponseCompression(services);
         AddHealthChecks(services, configuration);
         AddObservability(services);
 
         return services;
+    }
+
+    public const string FrontendCorsPolicy = "Frontend";
+
+    private static void AddCors(IServiceCollection services, IConfiguration configuration)
+    {
+        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? ["http://localhost:4200"];
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(FrontendCorsPolicy, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
+        });
     }
 
     private static void AddJwtAuthentication(IServiceCollection services, IConfiguration configuration)

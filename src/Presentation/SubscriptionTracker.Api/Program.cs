@@ -51,6 +51,8 @@ app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseRateLimiter();
 
+app.UseCors(SubscriptionTracker.Api.DependencyInjection.FrontendCorsPolicy);
+
 app.UseAuthentication();
 app.UseAuthorization();
 
