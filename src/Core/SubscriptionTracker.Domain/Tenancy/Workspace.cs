@@ -25,14 +25,15 @@ public sealed class Workspace : AuditableAggregateRoot<Guid>
 
     public IReadOnlyCollection<WorkspaceMember> Members => _members.AsReadOnly();
 
-    public static Result<Workspace> Create(string name, Guid ownerId, Guid ownerRoleId, DateTimeOffset occurredOnUtc)
+    public static Result<Workspace> Create(
+        string name, Guid ownerId, Guid ownerRoleId, DateTimeOffset occurredOnUtc, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Failure<Workspace>(Error.Validation("Workspace.EmptyName", "Workspace name cannot be empty."));
         }
 
-        var workspace = new Workspace(Guid.NewGuid(), name.Trim(), ownerId, WorkspaceSettings.Default());
+        var workspace = new Workspace(id ?? Guid.NewGuid(), name.Trim(), ownerId, WorkspaceSettings.Default());
         var ownerMember = WorkspaceMember.Invite(workspace.Id, ownerId, ownerRoleId, occurredOnUtc);
         ownerMember.Activate(occurredOnUtc);
         workspace._members.Add(ownerMember);

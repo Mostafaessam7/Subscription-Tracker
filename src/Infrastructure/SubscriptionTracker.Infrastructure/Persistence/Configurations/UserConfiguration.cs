@@ -39,5 +39,12 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(u => u.RefreshTokens).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(u => u.VerificationTokens)
+            .WithOne()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(u => u.VerificationTokens).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

@@ -10,7 +10,8 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
     <!-- CA1716: 'Error'/'New' etc. as type/member names is idiomatic for the Result pattern used throughout this codebase -->
-    <NoWarn>CA1848;CA2007;CA1716</NoWarn>
+    <!-- CA1848/CA1873: LoggerMessage source generators are unnecessary ceremony for this codebase's log volume -->
+    <NoWarn>CA1848;CA2007;CA1716;CA1873</NoWarn>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Deterministic>true</Deterministic>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>

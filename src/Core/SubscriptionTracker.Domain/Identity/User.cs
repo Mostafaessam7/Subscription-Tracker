@@ -10,6 +10,7 @@ public sealed class User : AuditableAggregateRoot<Guid>
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
     private readonly List<RefreshToken> _refreshTokens = [];
+    private readonly List<VerificationToken> _verificationTokens = [];
 
     private User(Guid id, Email email, string passwordHash, string firstName, string lastName)
         : base(id)
@@ -39,6 +40,7 @@ public sealed class User : AuditableAggregateRoot<Guid>
     public DateTimeOffset? LastLoginAtUtc { get; private set; }
 
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+    public IReadOnlyCollection<VerificationToken> VerificationTokens => _verificationTokens.AsReadOnly();
 
     public bool IsLockedOut => LockedUntilUtc is not null && LockedUntilUtc > DateTimeOffset.UtcNow;
 
@@ -156,5 +158,25 @@ public sealed class User : AuditableAggregateRoot<Guid>
         {
             token.Revoke(revokedByIp);
         }
+    }
+
+    public VerificationToken IssueVerificationToken(VerificationTokenPurpose purpose, string tokenHash, DateTimeOffset expiresAtUtc)
+    {
+        var token = VerificationToken.Issue(Id, purpose, tokenHash, expiresAtUtc);
+        _verificationTokens.Add(token);
+        return token;
+    }
+
+    public Result<VerificationToken> ConsumeVerificationToken(string tokenHash, VerificationTokenPurpose purpose)
+    {
+        var token = _verificationTokens.FirstOrDefault(t => t.TokenHash == tokenHash && t.Purpose == purpose);
+        if (token is null || !token.IsValid)
+        {
+            return Result.Failure<VerificationToken>(
+                Error.NotFound("User.VerificationTokenInvalid", "This verification token is invalid or has expired."));
+        }
+
+        token.Consume();
+        return token;
     }
 }

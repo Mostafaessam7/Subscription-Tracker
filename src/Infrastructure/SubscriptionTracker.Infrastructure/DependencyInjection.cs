@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Domain.Common;
 using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Interceptors;
@@ -33,6 +34,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
         return services;
