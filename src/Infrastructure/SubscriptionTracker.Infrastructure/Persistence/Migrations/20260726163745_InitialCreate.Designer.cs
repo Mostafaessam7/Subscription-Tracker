@@ -12,7 +12,7 @@ using SubscriptionTracker.Infrastructure.Persistence;
 namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260726163115_InitialCreate")]
+    [Migration("20260726163745_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -450,6 +450,43 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("SubscriptionTracker.Domain.Identity.VerificationToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ConsumedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Purpose");
+
+                    b.ToTable("VerificationTokens", (string)null);
+                });
+
             modelBuilder.Entity("SubscriptionTracker.Domain.Subscriptions.RenewalHistoryEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -749,6 +786,15 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SubscriptionTracker.Domain.Identity.VerificationToken", b =>
+                {
+                    b.HasOne("SubscriptionTracker.Domain.Identity.User", null)
+                        .WithMany("VerificationTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SubscriptionTracker.Domain.Subscriptions.RenewalHistoryEntry", b =>
                 {
                     b.HasOne("SubscriptionTracker.Domain.Subscriptions.Subscription", null)
@@ -897,6 +943,8 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("SubscriptionTracker.Domain.Identity.User", b =>
                 {
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("VerificationTokens");
                 });
 
             modelBuilder.Entity("SubscriptionTracker.Domain.Subscriptions.Subscription", b =>

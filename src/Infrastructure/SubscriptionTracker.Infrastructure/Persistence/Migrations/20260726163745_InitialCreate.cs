@@ -298,6 +298,29 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VerificationTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Purpose = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    TokenHash = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ExpiresAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ConsumedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VerificationTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VerificationTokens_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WorkspaceMembers",
                 columns: table => new
                 {
@@ -403,6 +426,17 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_VerificationTokens_TokenHash",
+                table: "VerificationTokens",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VerificationTokens_UserId_Purpose",
+                table: "VerificationTokens",
+                columns: new[] { "UserId", "Purpose" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkspaceMembers_WorkspaceId_UserId",
                 table: "WorkspaceMembers",
                 columns: new[] { "WorkspaceId", "UserId" },
@@ -437,13 +471,16 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
                 name: "Tags");
 
             migrationBuilder.DropTable(
+                name: "VerificationTokens");
+
+            migrationBuilder.DropTable(
                 name: "WorkspaceMembers");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Subscriptions");
 
             migrationBuilder.DropTable(
-                name: "Subscriptions");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Workspaces");
