@@ -22,6 +22,8 @@
       }
     </label>
 
+    <a routerLink="/auth/forgot-password" class="forgot-password-link">{{ 'auth.login.forgotPassword' | translate }}</a>
+
     <button type="submit" class="primary-button" [disabled]="isSubmitting()">
       {{ 'auth.login.submit' | translate }}
     </button>

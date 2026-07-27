@@ -1,0 +1,19 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>{{ 'auth.verifyEmail.title' | translate }}</h1>
+
+    @switch (state()) {
+      @case ('verifying') {
+        <p>{{ 'auth.verifyEmail.verifying' | translate }}</p>
+      }
+      @case ('success') {
+        <p>{{ 'auth.verifyEmail.success' | translate }}</p>
+        <a routerLink="/auth/login" class="primary-button">{{ 'auth.register.loginLink' | translate }}</a>
+      }
+      @case ('error') {
+        <p class="form-error" role="alert">{{ 'auth.verifyEmail.error' | translate }}</p>
+        <a routerLink="/auth/login" class="primary-button">{{ 'auth.register.loginLink' | translate }}</a>
+      }
+    }
+  </div>
+</div>

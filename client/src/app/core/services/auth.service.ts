@@ -3,11 +3,14 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
   RefreshTokenResponse,
   RegisterRequest,
   RegisterResponse,
+  ResetPasswordRequest,
+  VerifyEmailRequest,
 } from '../models/auth.models';
 import { TokenStorageService } from './token-storage.service';
 
@@ -58,6 +61,18 @@ export class AuthService {
     return this.http.post<void>(`${environment.apiBaseUrl}/auth/logout`, { refreshToken }).pipe(
       tap(() => this.clearSession()),
     );
+  }
+
+  verifyEmail(request: VerifyEmailRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/verify-email`, request);
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/forgot-password`, request);
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/reset-password`, request);
   }
 
   clearSession(): void {
