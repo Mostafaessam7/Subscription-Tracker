@@ -2,7 +2,7 @@
 
 **Read this file first if you are a new session continuing this project.** It contains everything needed to resume without re-deriving context.
 
-Last updated: 2026-07-27, after Milestone 8.
+Last updated: 2026-07-27, after Milestone 9.
 
 ## 1. What this project is
 
@@ -14,20 +14,21 @@ An enterprise-grade Subscription Tracker SaaS: .NET 10 Web API backend (Clean Ar
 - Don't ask for approval after every milestone; continue automatically. Only stop for a real blocker or an architectural decision that needs the user's input.
 - At the end of each milestone: report what was implemented, files touched, build status, test status, blockers — then continue.
 
-## 2. Current state (end of Milestone 8)
+## 2. Current state (end of Milestone 9)
 
-**Milestones 1–8 are complete and committed.** Milestones 9–10 (Angular frontend) are not started. See `TaskList` in this session's harness — if it's not visible to you (new session), the 10-milestone list is reconstructed below in §6.
+**Milestones 1–9 are complete and committed.** Only Milestone 10 (Angular feature pages beyond Auth) remains. See `TaskList` in this session's harness — if it's not visible to you (new session), the 10-milestone list is reconstructed below in §6.
 
-The app has been **run end-to-end against a real SQL Server LocalDB instance** (not just unit-tested): register → login → create subscription → list subscriptions → cancel subscription → change password → re-login all verified working via `curl`. An automated `WebApplicationFactory`-based integration test locks in this flow (`tests/SubscriptionTracker.Api.IntegrationTests/AuthAndSubscriptionsFlowTests.cs`).
+The full stack has been **run end-to-end for real** (not just unit-tested): backend against a live SQL Server LocalDB instance via `curl`, and separately the **Angular dev server driven through an actual browser against the live API** — register/login page renders, CORS preflight + login succeed, JWT persists, guards redirect correctly, theme/locale toggle, session survives reload, logout revokes the token server-side. See §5 for the bugs this surfaced that unit tests did not catch.
 
-**Test count: 66/66 passing** (45 Domain unit tests, 18 Application unit tests, 3 API integration tests).
+**Test count: 66/66 backend tests passing** (45 Domain, 18 Application, 3 API integration) **+ 11/11 frontend tests passing** (Vitest, via `ng test`).
 
-**Build: 0 warnings, 0 errors** across all 7 projects.
+**Build: 0 warnings, 0 errors** across all 7 .NET projects; `ng build` and `ng test` both clean.
 
 ### Git history
 
 ```
-(HEAD) feat: add Docker support (Dockerfile, docker-compose, .env.example)
+(HEAD) feat: add Angular frontend scaffold with working auth flow
+feat: add Docker support (Dockerfile, docker-compose, .env.example)
 feat: add Quartz.NET background jobs for renewals, expiry, and budget alerts
 7bf387a feat: add API layer (JWT auth, permissions, versioning, Swagger, middleware)
 7bd9abf feat: add Application layer CQRS (Identity + Subscriptions vertical slices)
@@ -60,6 +61,17 @@ dotnet run --project src/Presentation/SubscriptionTracker.Api
 # -> Swagger UI: http://localhost:5000/swagger
 # -> Health checks: http://localhost:5000/health/live, /health/ready
 ```
+
+```bash
+# Frontend, from client/
+cd client
+npm install         # already run once this session; node_modules is gitignored
+ng serve             # -> http://localhost:4200, proxies nothing - calls the API directly via environment.apiBaseUrl
+ng build              # production build -> dist/client
+ng test --watch=false  # Vitest (Angular 22's default runner, not Karma/Jasmine-in-Chrome)
+```
+
+The API's CORS policy (`Cors:AllowedOrigins` in appsettings, defaults to `http://localhost:4200`) must allow whatever origin `ng serve` is actually running on — update it if you change the dev server port.
 
 **Windows-specific gotcha hit repeatedly this session**: when you `dotnet run` an app and then try to `dotnet build`/`dotnet run` again, the previous process holds a file lock on the DLLs and the build fails with `MSB3027`/`MSB3021` ("file is locked by..."). Fix: kill stray `dotnet` processes before rebuilding —
 
@@ -146,6 +158,32 @@ The API now applies pending EF Core migrations automatically at startup (`Progra
 
 **⚠️ Not build-tested.** Docker is not installed in this environment (checked both the sandboxed Bash tool and the PowerShell host — neither has a `docker` binary), so the Dockerfile/compose file were written carefully by hand-tracing the actual project structure and dependency graph, but **have never actually been run through `docker build`/`docker compose up`**. Before relying on these in any real deployment, run `docker compose up --build` yourself and fix whatever surfaces — given how many subtle bugs turned up when *this* codebase was actually run against a live database (see §5), do not assume the Docker files are bug-free just because they look right on paper. The non-root `appuser` in the runtime image may need explicit write permission if you add file-based logging or local attachment storage (Serilog's file sink is currently configured to write to `logs/` relative to the working directory — verify that's writable by `appuser` in the container, or redirect it to a mounted volume).
 
+### Frontend (client/) — Angular 22, standalone components
+
+```
+client/src/app/
+  core/
+    guards/auth.guard.ts        — authGuard (requires tokens) / guestGuard (redirects if already authed)
+    interceptors/auth.interceptor.ts — attaches Bearer token, refreshes on 401 (single-flight via BehaviorSubject), retries
+    models/auth.models.ts       — request/response DTOs mirroring the API's C# records exactly (field names matter - System.Text.Json's default is camelCase output, matched here)
+    pipes/translate.pipe.ts     — impure pipe wrapping TranslationService.translate(); impure because the dictionary loads async after the pipe would otherwise have already run once
+    services/
+      auth.service.ts           — signals-based isAuthenticated; register/login/refreshToken/logout all call the real API
+      token-storage.service.ts  — localStorage session persistence (access/refresh tokens, expiry, workspaceId, userId)
+      theme.service.ts          — dark/light via [data-theme] on <html>, persisted + respects prefers-color-scheme on first load
+      translation.service.ts    — loads /i18n/{locale}.json (served from client/public/i18n/), sets [dir]/[lang] on <html> for RTL
+  layout/shell/                 — sidenav + topbar (locale/theme toggle, logout), wraps all authenticated routes via router-outlet
+  features/
+    auth/login/, auth/register/ — real reactive-form pages, fully wired to AuthService
+    dashboard/                  — intentionally minimal (just a translated heading) - Milestone 10 scope, not a mistake
+  app.routes.ts                 — lazy-loaded routes; '' -> dashboard, /auth/* guest-guarded, everything else auth-guarded under the shell
+  app.config.ts                 — provideHttpClient(withInterceptors([authInterceptor])) + provideAppInitializer loading translations before first render
+```
+
+i18n dictionaries live in `client/public/i18n/en.json` and `ar.json` (served as static assets, not compiled in) — add new keys to **both** files when adding UI text, and use the `translate` pipe (`{{ 'some.key' | translate }}`) rather than hardcoding strings, or Arabic/RTL support silently degrades for that string.
+
+The API's password-reset/email-verification links point at `{FrontendBaseUrl}/auth/verify-email?userId=...&token=...` and `/auth/reset-password?userId=...&token=...` (see `SmtpEmailSender` in the backend) — **these routes don't exist yet**, they're Milestone 10 scope. `Smtp:FrontendBaseUrl` in the backend's appsettings must match wherever the Angular app is actually deployed.
+
 ## 5. Bugs found and fixed this session (read before touching related code)
 
 These were caught by actually running the app against a live database, not by unit tests (the unit tests all passed while these bugs were live — a reminder that mocked-repository tests don't catch EF Core mapping/query issues). If you're implementing new aggregates/collections/domain events, watch for the same three classes of bug:
@@ -161,6 +199,8 @@ Also fixed (lower severity, caught before runtime):
 - `UnitOfWorkBehavior` originally only called `SaveChangesAsync` when `Result.IsSuccess` — this silently dropped state mutations made on the *failure* path (e.g. incrementing `FailedLoginAttempts` before returning "invalid credentials"). Now saves after every command regardless of business-result success/failure (a thrown exception still skips the save, since control never reaches that line).
 - FluentValidation's `.GreaterThan(0)` on a nullable int **passes when the value is null** (validators short-circuit on null by convention). `CreateSubscriptionCommandValidator`'s custom-billing-cycle rule needed an explicit `.NotNull()` before `.GreaterThan(0)`. Caught by a unit test, not by manual testing — worth remembering as a general FluentValidation gotcha for any other nullable-conditional rules you write.
 - `WorkspacesByMemberUserIdSpecification` filtered on `w.Members.Any(...)` but never called `AddInclude(w => w.Members)` — same root cause as bug #3, fixed both via the spec's explicit include and the `AutoInclude()` on the navigation (belt and suspenders).
+- **No CORS policy existed at all.** Never surfaced until the Angular dev server actually tried to call the API from a different origin — the browser blocked every request. Fixed by adding a `Cors:AllowedOrigins`-configurable policy (`DependencyInjection.AddCors`/`FrontendCorsPolicy`, defaults to `http://localhost:4200`) and `app.UseCors(...)` in the pipeline (must come before `UseAuthentication`/`UseAuthorization`). If you deploy the frontend to a different origin, add it to `Cors:AllowedOrigins` in the relevant `appsettings.*.json` or the environment won't be reachable — this class of bug is invisible to any test that doesn't literally run a browser against the API.
+- The Claude Browser tool's synthetic mouse clicks and `form_input` DOM-value-setting were unreliable in this environment (clicks sometimes didn't register on the first attempt; `form_input` set the DOM `.value` without dispatching a real `input` event, so Angular's reactive forms never saw the change and `form.invalid` stayed `true`, silently no-opping `submit()`). This is a tooling quirk, not an app bug — worth knowing if you hit the same "nothing happens on click" symptom: verify with `javascript_tool` by checking `input.className` for `ng-valid`/`ng-dirty`, and if needed drive the native `HTMLInputElement.prototype.value` setter + dispatch a real `Event('input', {bubbles:true})` yourself to confirm the underlying app logic is correct independent of the input tool.
 
 ## 6. Remaining milestones (not started)
 
@@ -174,8 +214,13 @@ Original 10-milestone plan, for reference:
 6. ✅ API layer (auth, versioning, Swagger, middleware)
 7. ✅ Background jobs & notifications (Quartz.NET — see §4 "Background jobs" above)
 8. ✅ Docker support (Dockerfile + docker-compose — see §4 "Docker" above; **not build-tested**, no Docker available in this environment)
-9. ⬜ **Angular frontend scaffold** — standalone components, routing, lazy loading, auth interceptor (attach JWT, handle 401 → refresh-token flow), route guards, core layout, dark/light theme, i18n scaffolding for English/Arabic with RTL. The API's email links already point to specific frontend routes (`/auth/verify-email?userId=...&token=...`, `/auth/reset-password?userId=...&token=...`) — those routes must exist with those exact query param names.
-10. ⬜ **Angular features** — Auth pages (login/register/verify-email/forgot-password/reset-password — the API's email links point to `{FrontendBaseUrl}/auth/verify-email?userId=...&token=...` and `/auth/reset-password?userId=...&token=...`, so those exact routes need to exist), Dashboard (KPI cards, charts, upcoming renewals), Subscriptions list/detail/create/edit with filtering, Reports.
+9. ✅ Angular frontend scaffold (routing, lazy loading, auth interceptor + guards, layout shell, dark/light theme, en/ar i18n with RTL, working Login/Register — see §4 "Frontend" above)
+10. ⬜ **Angular features** — this is the only remaining milestone:
+    - Auth pages still missing: verify-email, forgot-password, reset-password (routes `/auth/verify-email` and `/auth/reset-password` must read `userId`/`token` query params exactly as the backend email links produce them — see §4 "Frontend")
+    - Dashboard: KPI cards, spending charts, upcoming renewals, category breakdown — the `GetSubscriptionsQuery` backend endpoint already supports the filtering/sorting needed; you'll likely want a couple of new lightweight query endpoints for aggregates (total monthly spend, upcoming-renewals-in-N-days) rather than computing them client-side from a full list fetch
+    - Subscriptions: list view (table with filter/sort/pagination — backend already supports all of this via `GetSubscriptionsQuery`), detail view, create/edit forms, cancel/pause/resume actions — all corresponding backend endpoints already exist and are tested (`SubscriptionsController`)
+    - Reports: PDF/Excel/CSV export — **no backend support exists yet either**, this is greenfield on both sides
+    - Category/Tag/PaymentMethod management UI — blocked on the backend Application/API work listed just below, since those don't have handlers/controllers yet
 
 Also still outstanding from the original spec, not yet slotted into a milestone — fold into whichever milestone makes sense as you go:
 - Application-layer CQRS + API controllers for Category, Tag, PaymentMethod, Budget, Workspace (member invite/accept/remove already has full domain support in `Workspace`, just needs Application handlers + a controller).
@@ -197,5 +242,7 @@ Also still outstanding from the original spec, not yet slotted into a milestone 
 
 - Follow the **milestone → build → test → commit → next milestone** loop already established. Don't ask for approval between milestones per the original instructions.
 - After any Domain-layer change to an aggregate's persisted shape, regenerate the migration: `dotnet ef migrations add <Name> --project src/Infrastructure/SubscriptionTracker.Infrastructure --startup-project src/Infrastructure/SubscriptionTracker.Infrastructure --output-dir Persistence/Migrations`. If the generated `Up()` method is empty, it means no schema change was needed — remove it with `dotnet ef migrations remove` (same project args) rather than leaving a no-op migration in the history.
-- Before declaring a milestone done, actually run the app (not just unit tests) for anything touching persistence or the API — see §5 for why. The `dotnet build` + `dotnet test` loop did not catch any of the three real bugs; only running against a live LocalDB did.
-- Kill stray `dotnet` processes (see §3) before rebuilding if you've `dotnet run`-tested manually.
+- Before declaring a milestone done, actually run the app (not just unit tests) for anything touching persistence or the API — see §5 for why. The `dotnet build` + `dotnet test` loop did not catch any of the three real backend bugs, nor the missing-CORS bug; only actually running a browser against the live API did.
+- Kill stray `dotnet` processes (see §3) before rebuilding if you've `dotnet run`-tested manually. Same applies to stray `node`/`ng serve`/vite processes on the frontend side if you're iterating quickly.
+- When testing the frontend through the Claude Browser tool, be aware of the input-delivery flakiness noted in §5 — if a click/type seems to do nothing, verify with `javascript_tool` (check `ng-valid`/`ng-dirty` classes, or just read `input.value`) before concluding the app itself is broken.
+- For Milestone 10, the backend already exposes everything Subscriptions/Auth pages need (see the endpoint lists in §4). Don't duplicate business logic client-side that the backend already validates (e.g. billing-cycle/reminder-day rules) — call the API and surface its `ProblemDetails` errors, matching the pattern already established in `login.ts`/`register.ts`.
