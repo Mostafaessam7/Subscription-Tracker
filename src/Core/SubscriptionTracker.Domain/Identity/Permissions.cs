@@ -31,11 +31,18 @@ public static class Permissions
         public const string Manage = "budgets:manage";
     }
 
+    public static class Catalog
+    {
+        public const string View = "catalog:view";
+        public const string Manage = "catalog:manage";
+    }
+
     public static IReadOnlyCollection<string> All { get; } =
     [
         Subscriptions.View, Subscriptions.Create, Subscriptions.Edit, Subscriptions.Delete, Subscriptions.Cancel,
         Workspace.ManageMembers, Workspace.ManageSettings, Workspace.ManageRoles,
         Reports.View, Reports.Export,
         Budgets.View, Budgets.Manage,
+        Catalog.View, Catalog.Manage,
     ];
 }

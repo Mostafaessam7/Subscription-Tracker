@@ -3,8 +3,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { CatalogService } from '../../../core/services/catalog.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { BillingFrequency } from '../../../core/models/subscription.models';
+import { Category, PaymentMethod, Tag } from '../../../core/models/catalog.models';
 
 @Component({
   selector: 'app-subscription-form',
@@ -16,6 +18,7 @@ import { BillingFrequency } from '../../../core/models/subscription.models';
 export class SubscriptionForm implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly subscriptionService = inject(SubscriptionService);
+  private readonly catalogService = inject(CatalogService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -33,6 +36,11 @@ export class SubscriptionForm implements OnInit {
   readonly isSubmitting = signal(false);
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  readonly categories = signal<Category[]>([]);
+  readonly paymentMethods = signal<PaymentMethod[]>([]);
+  readonly tags = signal<Tag[]>([]);
+  readonly selectedTagIds = signal<string[]>([]);
 
   private subscriptionId: string | null = null;
 
@@ -53,6 +61,10 @@ export class SubscriptionForm implements OnInit {
   });
 
   ngOnInit(): void {
+    this.catalogService.getCategories().subscribe({ next: (c) => this.categories.set(c) });
+    this.catalogService.getPaymentMethods().subscribe({ next: (p) => this.paymentMethods.set(p) });
+    this.catalogService.getTags().subscribe({ next: (t) => this.tags.set(t) });
+
     this.subscriptionId = this.route.snapshot.paramMap.get('id');
     this.isEditMode.set(this.subscriptionId !== null);
 
@@ -75,6 +87,7 @@ export class SubscriptionForm implements OnInit {
             trialEndDate: subscription.trialEndDate ?? '',
             autoRenewal: subscription.autoRenewal,
           });
+          this.selectedTagIds.set([...subscription.tagIds]);
           // Billing frequency/start date are immutable after creation on the backend
           // (UpdateSubscriptionCommand doesn't accept them), so lock the fields down in edit mode.
           this.form.controls.billingFrequency.disable();
@@ -90,6 +103,16 @@ export class SubscriptionForm implements OnInit {
         },
       });
     }
+  }
+
+  toggleTag(tagId: string): void {
+    this.selectedTagIds.update((ids) =>
+      ids.includes(tagId) ? ids.filter((id) => id !== tagId) : [...ids, tagId],
+    );
+  }
+
+  isTagSelected(tagId: string): boolean {
+    return this.selectedTagIds().includes(tagId);
   }
 
   submit(): void {
@@ -122,7 +145,7 @@ export class SubscriptionForm implements OnInit {
 
     if (this.isEditMode() && this.subscriptionId) {
       const id = this.subscriptionId;
-      this.subscriptionService.update(id, { ...shared, tagIds: [] }).subscribe({
+      this.subscriptionService.update(id, { ...shared, tagIds: this.selectedTagIds() }).subscribe({
         next: () => {
           this.isSubmitting.set(false);
           void this.router.navigate(['/subscriptions', id]);
@@ -138,7 +161,7 @@ export class SubscriptionForm implements OnInit {
           startDate: raw.startDate,
           trialEndDate: raw.trialEndDate || null,
           autoRenewal: raw.autoRenewal,
-          tagIds: [],
+          tagIds: this.selectedTagIds(),
         })
         .subscribe({
           next: (id) => {

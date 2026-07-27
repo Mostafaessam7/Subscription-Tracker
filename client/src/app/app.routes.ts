@@ -32,6 +32,7 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
+      { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
       {
         path: 'subscriptions',
         children: [

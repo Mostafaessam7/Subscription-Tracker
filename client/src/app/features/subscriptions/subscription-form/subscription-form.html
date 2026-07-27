@@ -79,6 +79,42 @@
         </label>
       }
 
+      <div class="field-row">
+        <label class="field">
+          <span>{{ 'subscriptions.category' | translate }}</span>
+          <select formControlName="categoryId">
+            <option value="">{{ 'subscriptions.noCategory' | translate }}</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>{{ 'subscriptions.paymentMethod' | translate }}</span>
+          <select formControlName="paymentMethodId">
+            <option value="">{{ 'subscriptions.noPaymentMethod' | translate }}</option>
+            @for (paymentMethod of paymentMethods(); track paymentMethod.id) {
+              <option [value]="paymentMethod.id">{{ paymentMethod.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      @if (tags().length > 0) {
+        <div class="field">
+          <span>{{ 'subscriptions.tags' | translate }}</span>
+          <div class="tag-checklist">
+            @for (tag of tags(); track tag.id) {
+              <label class="tag-checkbox">
+                <input type="checkbox" [checked]="isTagSelected(tag.id)" (change)="toggleTag(tag.id)" />
+                <span>{{ tag.name }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      }
+
       <label class="field">
         <span>{{ 'subscriptions.website' | translate }}</span>
         <input type="url" formControlName="websiteUrl" />

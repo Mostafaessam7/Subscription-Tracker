@@ -1,0 +1,108 @@
+<div class="settings-page">
+  <h1>{{ 'nav.settings' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  <section class="settings-section">
+    <h2>{{ 'settings.categories.title' | translate }}</h2>
+
+    <ul class="catalog-list">
+      @for (category of categories(); track category.id) {
+        <li>
+          <span class="swatch" [style.background-color]="category.color || 'transparent'"></span>
+          <span class="item-name">{{ category.name }}</span>
+          <button type="button" class="link-button" (click)="editCategory(category)">{{ 'settings.edit' | translate }}</button>
+          <button type="button" class="link-button danger" (click)="deleteCategory(category)">{{ 'settings.delete' | translate }}</button>
+        </li>
+      } @empty {
+        <li class="empty-row">{{ 'settings.categories.empty' | translate }}</li>
+      }
+    </ul>
+
+    <form class="inline-form" [formGroup]="categoryForm" (ngSubmit)="submitCategory()" novalidate>
+      <input type="text" formControlName="name" [placeholder]="'settings.categories.namePlaceholder' | translate" />
+      <input type="text" formControlName="color" [placeholder]="'settings.colorPlaceholder' | translate" />
+      <input type="text" formControlName="icon" [placeholder]="'settings.categories.iconPlaceholder' | translate" />
+      <button type="submit" class="primary-button">
+        {{ (isEditingAnyCategory ? 'settings.save' : 'settings.add') | translate }}
+      </button>
+      @if (isEditingAnyCategory) {
+        <button type="button" class="secondary-button" (click)="cancelCategoryEdit()">{{ 'settings.cancel' | translate }}</button>
+      }
+    </form>
+  </section>
+
+  <section class="settings-section">
+    <h2>{{ 'settings.tags.title' | translate }}</h2>
+
+    <ul class="catalog-list">
+      @for (tag of tags(); track tag.id) {
+        <li>
+          <span class="swatch" [style.background-color]="tag.color || 'transparent'"></span>
+          <span class="item-name">{{ tag.name }}</span>
+          <button type="button" class="link-button" (click)="editTag(tag)">{{ 'settings.edit' | translate }}</button>
+          <button type="button" class="link-button danger" (click)="deleteTag(tag)">{{ 'settings.delete' | translate }}</button>
+        </li>
+      } @empty {
+        <li class="empty-row">{{ 'settings.tags.empty' | translate }}</li>
+      }
+    </ul>
+
+    <form class="inline-form" [formGroup]="tagForm" (ngSubmit)="submitTag()" novalidate>
+      <input type="text" formControlName="name" [placeholder]="'settings.tags.namePlaceholder' | translate" />
+      <input type="text" formControlName="color" [placeholder]="'settings.colorPlaceholder' | translate" />
+      <button type="submit" class="primary-button">
+        {{ (isEditingAnyTag ? 'settings.save' : 'settings.add') | translate }}
+      </button>
+      @if (isEditingAnyTag) {
+        <button type="button" class="secondary-button" (click)="cancelTagEdit()">{{ 'settings.cancel' | translate }}</button>
+      }
+    </form>
+  </section>
+
+  <section class="settings-section">
+    <h2>{{ 'settings.paymentMethods.title' | translate }}</h2>
+
+    <ul class="catalog-list">
+      @for (paymentMethod of paymentMethods(); track paymentMethod.id) {
+        <li>
+          <span class="item-name">{{ paymentMethod.label }}</span>
+          <span class="item-meta">{{ 'settings.paymentMethods.type.' + paymentMethod.type | translate }}</span>
+          @if (paymentMethod.isDefault) {
+            <span class="default-badge">{{ 'settings.paymentMethods.default' | translate }}</span>
+          }
+          <button type="button" class="link-button" (click)="editPaymentMethod(paymentMethod)">{{ 'settings.edit' | translate }}</button>
+          <button type="button" class="link-button danger" (click)="deletePaymentMethod(paymentMethod)">{{ 'settings.delete' | translate }}</button>
+        </li>
+      } @empty {
+        <li class="empty-row">{{ 'settings.paymentMethods.empty' | translate }}</li>
+      }
+    </ul>
+
+    <form class="inline-form" [formGroup]="paymentMethodForm" (ngSubmit)="submitPaymentMethod()" novalidate>
+      @if (!isEditingAnyPaymentMethod) {
+        <select formControlName="type">
+          @for (option of paymentMethodTypeOptions; track option) {
+            <option [ngValue]="option">{{ 'settings.paymentMethods.type.' + option | translate }}</option>
+          }
+        </select>
+      }
+      <input type="text" formControlName="label" [placeholder]="'settings.paymentMethods.labelPlaceholder' | translate" />
+      @if (!isEditingAnyPaymentMethod) {
+        <input type="text" formControlName="maskedDetails" [placeholder]="'settings.paymentMethods.maskedDetailsPlaceholder' | translate" />
+      }
+      <label class="checkbox-inline">
+        <input type="checkbox" formControlName="isDefault" />
+        <span>{{ 'settings.paymentMethods.default' | translate }}</span>
+      </label>
+      <button type="submit" class="primary-button">
+        {{ (isEditingAnyPaymentMethod ? 'settings.save' : 'settings.add') | translate }}
+      </button>
+      @if (isEditingAnyPaymentMethod) {
+        <button type="button" class="secondary-button" (click)="cancelPaymentMethodEdit()">{{ 'settings.cancel' | translate }}</button>
+      }
+    </form>
+  </section>
+</div>

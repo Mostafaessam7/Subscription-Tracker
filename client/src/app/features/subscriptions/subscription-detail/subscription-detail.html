@@ -37,6 +37,20 @@
         <span class="label">{{ 'subscriptions.autoRenewal' | translate }}</span>
         <span>{{ (subscription()!.autoRenewal ? 'common.yes' : 'common.no') | translate }}</span>
       </div>
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.category' | translate }}</span>
+        <span>{{ categoryName() ?? ('subscriptions.noCategory' | translate) }}</span>
+      </div>
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.paymentMethod' | translate }}</span>
+        <span>{{ paymentMethodLabel() ?? ('subscriptions.noPaymentMethod' | translate) }}</span>
+      </div>
+      @if (tagNames().length > 0) {
+        <div class="detail-field full-width">
+          <span class="label">{{ 'subscriptions.tags' | translate }}</span>
+          <span>{{ tagNames().join(', ') }}</span>
+        </div>
+      }
       @if (subscription()!.websiteUrl) {
         <div class="detail-field">
           <span class="label">{{ 'subscriptions.website' | translate }}</span>

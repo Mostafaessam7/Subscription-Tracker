@@ -2,7 +2,7 @@
 
 **Read this file first if you are a new session continuing this project.** It contains everything needed to resume without re-deriving context.
 
-Last updated: 2026-07-27, after Milestone 10 (all 10 milestones now complete).
+Last updated: 2026-07-27, after Milestone 10 + Category/Tag/PaymentMethod CRUD (a post-milestone-10 follow-on, see §6).
 
 **Repo location note**: this project has been worked on from more than one machine/path (`F:\My laptob\Project\2-Subscription Tracker` in earlier sessions, `D:\Projects\All\2-Subscription Tracker` currently). Always trust the actual current working directory over any path string in this document.
 
@@ -16,21 +16,22 @@ An enterprise-grade Subscription Tracker SaaS: .NET 10 Web API backend (Clean Ar
 - Don't ask for approval after every milestone; continue automatically. Only stop for a real blocker or an architectural decision that needs the user's input.
 - At the end of each milestone: report what was implemented, files touched, build status, test status, blockers — then continue.
 
-## 2. Current state (end of Milestone 10 — all milestones complete)
+## 2. Current state (end of Milestone 10 + Category/Tag/PaymentMethod CRUD)
 
-**All 10 milestones are complete.** The originally-scoped feature set (backend + frontend) is done. What's left is the "also still outstanding" list in §6 (Category/Tag/PaymentMethod CRUD, 2FA, session management, file uploads, reports export) — none of these were part of the numbered 10-milestone plan; they were flagged as stretch/follow-on scope throughout.
+**All 10 milestones are complete**, and one of the previously-flagged stretch items — **Application CQRS + API + frontend for Category, Tag, and PaymentMethod** — is now also done. What's left is the remaining "also still outstanding" list in §6 (2FA, session management, file uploads, reports export) — none of these were part of the numbered 10-milestone plan; they were flagged as stretch/follow-on scope throughout.
 
-The full stack has been **run end-to-end for real** (not just unit-tested) multiple times across sessions: backend against a live SQL Server LocalDB instance, and the **Angular dev server driven through an actual browser against the live API**. This session's pass covered: register → login → create subscription → pause → edit → cancel, the dashboard KPIs/upcoming-renewals/frequency-breakdown aggregating real data correctly, forgot-password/reset-password (including the invalid-token error path), and the ar/RTL locale toggle rendering the new pages correctly. See §5 for the bugs this surfaced that unit tests did not catch (both from earlier sessions and this one).
+The full stack has been **run end-to-end for real** (not just unit-tested) multiple times across sessions: backend against a live SQL Server LocalDB instance, and the **Angular dev server driven through an actual browser against the live API**. The Category/Tag/PaymentMethod pass covered: creating a category/tag/payment-method via the new `/settings` page, editing a payment method to flip its `isDefault` flag (confirming the unmark-other-defaults invariant), deleting a tag, and then creating a subscription through `subscription-form` with a real category/payment-method/tag selected — confirmed the subscription detail page resolves and displays the category name, payment method label, and tag name (not raw GUIDs), and confirmed deleting a referenced tag afterward doesn't break the detail page (it just silently stops showing that tag). See §5 for what this surfaced.
 
-**Test count: 66/66 backend tests passing** (45 Domain, 18 Application, 3 API integration) **+ 11/11 frontend tests passing** (Vitest, via `ng test`) — unchanged this session (Milestone 10 was pure Angular feature work with no new unit tests added; the browser pass above is what actually validated it).
+**Test count: 82/82 backend tests passing** (45 Domain, 34 Application — 18 original + 16 new Catalog tests, 3 API integration) **+ 11/11 frontend tests passing** (Vitest, via `ng test` — no new frontend unit tests added for Catalog; coverage there is the browser pass described above).
 
 **Build: 0 warnings, 0 errors** across all 7 .NET projects; `ng build` and `ng test` both clean.
 
 ### Git history
 
-Milestone 10 work is **uncommitted as of this HANDOVER update** — commit it yourself (or ask to have it committed) once you've reviewed the diff; this session did not commit per the "only commit when explicitly asked" rule. Prior history (all committed):
+Milestone 10 (auth pages, subscriptions CRUD/actions, dashboard) is committed. **The Category/Tag/PaymentMethod CRUD work described in this update is uncommitted as of this HANDOVER edit** — commit it yourself (or ask to have it committed) once you've reviewed the diff. Prior history (all committed):
 
 ```
+06d3732 feat: add Angular Milestone 10 features (auth pages, subscriptions CRUD, dashboard)
 c6f65dc docs: update HANDOVER.md for Milestone 9 completion
 6133d33 feat: add Angular frontend scaffold with working auth flow
 3a76673 feat: add Docker support (Dockerfile, docker-compose, .env.example)
@@ -62,9 +63,9 @@ dotnet ef database update --project src/Infrastructure/SubscriptionTracker.Infra
 
 # Run the API (Development environment gives you Swagger UI at /swagger)
 $env:ASPNETCORE_ENVIRONMENT="Development"   # PowerShell
-dotnet run --project src/Presentation/SubscriptionTracker.Api
-# -> Swagger UI: http://localhost:5000/swagger
-# -> Health checks: http://localhost:5000/health/live, /health/ready
+dotnet run --project src/Presentation/SubscriptionTracker.Api --launch-profile http
+# -> Swagger UI: http://localhost:5073/swagger  (see Properties/launchSettings.json — NOT 5000, see §5)
+# -> Health checks: http://localhost:5073/health/live, /health/ready
 ```
 
 ```bash
@@ -122,8 +123,9 @@ CQRS via MediatR 12.4.1 (pinned — **do not upgrade past 12.x**, v13+ requires 
 - **Abstractions/**: interfaces Infrastructure/Api implement — `ICurrentUserService`, `IPasswordHasher`, `IJwtTokenService`, `IEmailSender`, `IApplicationDbContext` (read-only `IQueryable<T>` surface used by query handlers to bypass the repository/specification pattern — this is intentional CQRS: commands go through aggregates+repositories, queries hit the DB context directly for projections).
 - **Identity/**: Register, Login, RefreshToken (rotation), ChangePassword, VerifyEmail, ForgotPassword/ResetPassword (non-enumerable — always returns success even for unknown emails), Logout.
 - **Subscriptions/**: CreateSubscription, UpdateSubscription, CancelSubscription, PauseSubscription, ResumeSubscription, GetSubscriptionById, GetSubscriptions (paged/filtered/sorted list).
+- **Catalog/**: full CRUD for Category, Tag, PaymentMethod — `Create*`/`Update*`/`Delete*`/`Get*` (list-only, no `GetById` — the frontend only ever needs the full list for dropdowns/checklists). Category and Tag creation/rename check a `(WorkspaceId, Name)` uniqueness specification (`CategoryByWorkspaceAndNameSpecification`/`TagByWorkspaceAndNameSpecification`) and return `Error.Conflict` on a duplicate name, matching the DB's unique index (see Infrastructure section). PaymentMethod has no name-uniqueness constraint but does enforce a **"only one default per workspace"** invariant: `CreatePaymentMethodCommandHandler.UnmarkOtherDefaultsAsync` (a `static internal` helper reused by `UpdatePaymentMethodCommandHandler`) loads all currently-default payment methods via `DefaultPaymentMethodByWorkspaceSpecification` and unmarks them before the new/updated one is saved as default. **If you add another payment-method mutation path, route it through that same helper** rather than reimplementing the unmark logic, or the invariant will silently break.
 
-**Not yet built**: Application-layer CRUD for Category/Tag/PaymentMethod/Budget/Workspace (see §6 — pattern is fully established by Subscriptions, should be fast to replicate).
+**Not yet built**: Application-layer CRUD for Budget/Workspace (see §6 — pattern is fully established by Subscriptions/Catalog, should be fast to replicate).
 
 ### Infrastructure layer
 
@@ -138,9 +140,9 @@ CQRS via MediatR 12.4.1 (pinned — **do not upgrade past 12.x**, v13+ requires 
 - `ICurrentUserService` implemented via `IHttpContextAccessor` reading JWT claims.
 - Global exception handling: `GlobalExceptionHandler : IExceptionHandler` (unhandled exceptions → generic 500 ProblemDetails, logged with full stack trace via Serilog) + `ResultExtensions.ToActionResult(...)` (business `Result` failures → typed ProblemDetails: `ErrorType.Validation→400`, `NotFound→404`, `Conflict→409`, `Unauthorized→401`, `Forbidden→403`).
 - API versioning via URL segment (`/api/v1/...`), Swagger with per-version docs + JWT bearer security scheme, rate limiting (100 req/min per user/IP, fixed window), response compression (Brotli+Gzip), SQL Server health checks at `/health/live` and `/health/ready`, Serilog (console + rolling file), OpenTelemetry (traces + metrics, no exporter destination configured yet — add OTLP endpoint config when you have a collector).
-- Controllers: `AuthController`, `SubscriptionsController` (both `api/v1/...`, versioned).
+- Controllers: `AuthController`, `SubscriptionsController`, `CategoriesController`, `TagsController`, `PaymentMethodsController` (all `api/v1/...`, versioned). The three catalog controllers are gated by two new permission codes, `Permissions.Catalog.View` (GET) and `Permissions.Catalog.Manage` (POST/PUT/DELETE) — added to `Permissions.All`, so any **newly-registered** workspace's ad-hoc Owner role picks them up automatically. **Workspaces registered before this change do not have these permissions** on their stored Owner role (role permission lists are a snapshot taken at registration time, not computed live) — if you hit 403s testing against an old test user, register a fresh one or manually grant the permission.
 
-**Not yet built**: controllers for Category/Tag/PaymentMethod/Budget/Workspace management, session management endpoints, 2FA endpoints (domain has the flags — `User.EnableTwoFactor`/`DisableTwoFactor` — but no TOTP generation/validation or API surface yet).
+**Not yet built**: controllers for Budget/Workspace management, session management endpoints, 2FA endpoints (domain has the flags — `User.EnableTwoFactor`/`DisableTwoFactor` — but no TOTP generation/validation or API surface yet).
 
 ### Background jobs (src/Infrastructure/SubscriptionTracker.Infrastructure/BackgroundJobs)
 
@@ -186,7 +188,8 @@ client/src/app/
     dashboard/                            — KPI cards (active/trial counts, estimated monthly spend), upcoming-renewals-in-30-days list, subscriptions-by-billing-frequency breakdown; all computed client-side from GetSubscriptionsQuery (pageSize capped at the backend's max of 100 — see §5). No category-name breakdown since Category CRUD doesn't exist yet (see §6) — breaks down by billing frequency instead.
     subscriptions/subscription-list/      — table with search/status filter/column sort/pagination, all delegated to GetSubscriptionsQuery query params
     subscriptions/subscription-detail/    — single subscription view + pause/resume/cancel actions (buttons conditionally shown based on current status)
-    subscriptions/subscription-form/      — shared create/edit reactive form; in edit mode, billingFrequency/startDate/customIntervalDays/trialEndDate/autoRenewal are disabled because UpdateSubscriptionCommand doesn't accept them (backend treats them immutable post-creation)
+    subscriptions/subscription-form/      — shared create/edit reactive form; in edit mode, billingFrequency/startDate/customIntervalDays/trialEndDate/autoRenewal are disabled because UpdateSubscriptionCommand doesn't accept them (backend treats them immutable post-creation). categoryId/paymentMethodId are now real `<select>` dropdowns and tags are a checkbox checklist (`selectedTagIds` signal, outside the reactive form since Angular reactive forms don't model a plain string-array control cleanly), all populated from `CatalogService` on init.
+    settings/                             — one page, three sections (Categories/Tags/PaymentMethods), each with a list + a single inline create-or-edit form (an `editingXId: string | null` field on the component toggles the form between create/update mode and swaps the submit button's label) + delete buttons. Deliberately one shared page rather than three separate routes/pages — the CRUD surface for each is small enough that splitting it out would be pure ceremony.
   app.routes.ts                 — lazy-loaded routes; '' -> dashboard, /auth/* guest-guarded, everything else auth-guarded under the shell (subscriptions routes: '', 'new', ':id/edit', ':id' — order matters, 'new' and ':id/edit' must precede the bare ':id' route)
   app.config.ts                 — provideHttpClient(withInterceptors([authInterceptor])) + provideAppInitializer loading translations before first render
 ```
@@ -195,11 +198,18 @@ i18n dictionaries live in `client/public/i18n/en.json` and `ar.json` (served as 
 
 The API's password-reset/email-verification links point at `{FrontendBaseUrl}/auth/verify-email?userId=...&token=...` and `/auth/reset-password?userId=...&token=...` (see `SmtpEmailSender` in the backend) — these routes now exist (Milestone 10) and read the query params exactly as produced. `Smtp:FrontendBaseUrl` in the backend's appsettings must match wherever the Angular app is actually deployed.
 
-**No Category/Tag/PaymentMethod list endpoints exist on the backend yet**, so `subscription-form` exposes `categoryId`/`paymentMethodId` as plain optional GUID text inputs rather than dropdowns, and `tagIds` is always submitted as `[]`. This is a deliberate scope call, not an oversight — building proper pickers is blocked on the backend CRUD work in §6.
+Category/Tag/PaymentMethod now have full CRUD on both ends (`core/models/catalog.models.ts` + `core/services/catalog.service.ts` on the frontend, `CategoriesController`/`TagsController`/`PaymentMethodsController` on the backend) — see the `settings/` and `subscriptions/subscription-form/` entries above.
 
 ## 5. Bugs found and fixed (read before touching related code)
 
-### From this session (Milestone 10 — Angular features)
+### From this session (Category/Tag/PaymentMethod CRUD)
+
+No backend bugs surfaced — `dotnet build`/`dotnet test` (82/82) caught everything on the C# side. Two things worth flagging that aren't bugs but are easy to trip on:
+
+- `IApplicationDbContext`'s `IQueryable<T>` properties are explicitly `.AsNoTracking()` (see `ApplicationDbContext.cs`) — you **cannot** mutate an entity fetched through it. `CreatePaymentMethodCommandHandler.UnmarkOtherDefaultsAsync` needed tracked entities to call `UnmarkAsDefault()` + `repository.Update(...)`, so it goes through `IRepository<PaymentMethod,Guid>.ListAsync(spec)` instead of `dbContext.PaymentMethods`. **If a handler needs to read-then-mutate a set of entities (not just project a DTO), use the repository's spec-based `ListAsync`, not `IApplicationDbContext`.**
+- The Claude Browser tool's click-doesn't-register issue (see below) also affects **checkboxes**, not just buttons/inputs: `computer{action:"left_click"}` on a checkbox ref toggled the DOM `checked` property without Angular's reactive form ever seeing a `change` event, so a payment method created via the browser test initially saved with `isDefault: false` despite the checkbox appearing checked in the accessibility tree. Fixed the test (not the app) by driving the native `HTMLInputElement.prototype.checked` setter + dispatching a real `change` event via `javascript_tool`, then separately verified the *edit* flow really did flip `isDefault` server-side via a raw `fetch()` against the API. The lesson from §5/earlier sessions generalizes: **any synthetic browser interaction that changes form state (click, type, or check) should be verified against the actual submitted network payload, not just the visual DOM state**, before trusting a "it works" conclusion.
+
+### From Milestone 10 (Angular features)
 
 Caught by actually driving the Angular dev server through a browser against the live API (backend was unchanged this session, so `dotnet test`/`dotnet build` gave no signal on any of these):
 
@@ -226,7 +236,7 @@ Also fixed (lower severity, caught before runtime):
 - **No CORS policy existed at all.** Never surfaced until the Angular dev server actually tried to call the API from a different origin — the browser blocked every request. Fixed by adding a `Cors:AllowedOrigins`-configurable policy (`DependencyInjection.AddCors`/`FrontendCorsPolicy`, defaults to `http://localhost:4200`) and `app.UseCors(...)` in the pipeline (must come before `UseAuthentication`/`UseAuthorization`). If you deploy the frontend to a different origin, add it to `Cors:AllowedOrigins` in the relevant `appsettings.*.json` or the environment won't be reachable — this class of bug is invisible to any test that doesn't literally run a browser against the API.
 - The Claude Browser tool's synthetic mouse clicks and `form_input` DOM-value-setting were unreliable in this environment (clicks sometimes didn't register on the first attempt; `form_input` set the DOM `.value` without dispatching a real `input` event, so Angular's reactive forms never saw the change and `form.invalid` stayed `true`, silently no-opping `submit()`). This is a tooling quirk, not an app bug — worth knowing if you hit the same "nothing happens on click" symptom: verify with `javascript_tool` by checking `input.className` for `ng-valid`/`ng-dirty`, and if needed drive the native `HTMLInputElement.prototype.value` setter + dispatch a real `Event('input', {bubbles:true})` yourself to confirm the underlying app logic is correct independent of the input tool.
 
-## 6. Milestone status — all 10 complete; remaining work is stretch scope
+## 6. Milestone status — all 10 complete; Category/Tag/PaymentMethod CRUD also done; remaining work is stretch scope
 
 Original 10-milestone plan, all done:
 
@@ -239,15 +249,17 @@ Original 10-milestone plan, all done:
 7. ✅ Background jobs & notifications (Quartz.NET — see §4 "Background jobs" above)
 8. ✅ Docker support (Dockerfile + docker-compose — see §4 "Docker" above; **not build-tested**, no Docker available in this environment)
 9. ✅ Angular frontend scaffold (routing, lazy loading, auth interceptor + guards, layout shell, dark/light theme, en/ar i18n with RTL, working Login/Register — see §4 "Frontend" above)
-10. ✅ **Angular features** (this session):
+10. ✅ **Angular features**:
     - Auth pages: verify-email, forgot-password, reset-password — done, browser-verified including the invalid-token error path (see §5)
-    - Dashboard: KPI cards, upcoming renewals (30-day window), spend-by-billing-frequency breakdown — done, computed client-side from `GetSubscriptionsQuery` (see §4 "Frontend" for the pageSize-100 cap and the category-breakdown scope call)
+    - Dashboard: KPI cards, upcoming renewals (30-day window), spend-by-billing-frequency breakdown — done, computed client-side from `GetSubscriptionsQuery` (see §4 "Frontend" for the pageSize-100 cap)
     - Subscriptions: list (filter/sort/pagination), detail view, create/edit forms, pause/resume/cancel actions — done, browser-verified end to end (create → detail → pause → edit → cancel, plus the list/dashboard reflecting each state change)
-    - Reports: PDF/Excel/CSV export — **not done**, no backend support exists either; this was always flagged as greenfield-on-both-sides and wasn't picked up this session
-    - Category/Tag/PaymentMethod management UI — **not done**, still blocked on the backend Application/API work in the list below
+    - Reports: PDF/Excel/CSV export — **not done**, no backend support exists either; this was always flagged as greenfield-on-both-sides and still hasn't been picked up
+    - Category/Tag/PaymentMethod management UI — **done** (see below), was originally blocked on backend Application/API work, which is now also done
 
-Also still outstanding from the original spec, never part of the numbered milestones — pick up as a follow-on project if needed:
-- Application-layer CQRS + API controllers for Category, Tag, PaymentMethod, Budget, Workspace (member invite/accept/remove already has full domain support in `Workspace`, just needs Application handlers + a controller).
+**Post-Milestone-10 follow-on, also done**: Application-layer CQRS + API controllers + frontend `settings/` page for Category, Tag, and PaymentMethod (see §4 Application/API/Frontend sections and §5 for details). Wired into `subscription-form`'s categoryId/paymentMethodId dropdowns and tagIds checklist, and into `subscription-detail`'s display (resolves IDs to names client-side via `CatalogService`). Backend: 16 new Application unit tests. Browser-verified: full create/edit/delete cycle for all three entity types, the payment-method "only one default" invariant, and a subscription referencing a category/tag/payment-method by ID resolving to the right display name.
+
+Still outstanding from the original spec, never part of the numbered milestones — pick up as a follow-on project if needed:
+- Application-layer CQRS + API controllers for Budget, Workspace (member invite/accept/remove already has full domain support in `Workspace`, just needs Application handlers + a controller).
 - Two-factor authentication (TOTP) — domain flags exist, no implementation.
 - Session management UI/API (list/revoke active refresh tokens — `User.RefreshTokens` already tracks `CreatedByIp`/dates, just needs a query + revoke-by-id endpoint).
 - File attachment upload (`Subscription.AddAttachment` domain method exists and is fully configured in EF; needs an actual storage backend — local disk or blob storage — and an API endpoint with multipart upload).
@@ -270,4 +282,5 @@ Also still outstanding from the original spec, never part of the numbered milest
 - Kill stray `dotnet` processes (see §3) before rebuilding if you've `dotnet run`-tested manually. Same applies to stray `node`/`ng serve`/vite processes on the frontend side if you're iterating quickly.
 - When testing the frontend through the Claude Browser tool, be aware of the input-delivery flakiness noted in §5 — if a click/type seems to do nothing, verify with `javascript_tool` (check `ng-valid`/`ng-dirty` classes, or just read `input.value`) before concluding the app itself is broken.
 - Milestone 10's Subscriptions/Auth pages relied entirely on backend endpoints that already existed (see §4). Don't duplicate business logic client-side that the backend already validates (e.g. billing-cycle/reminder-day rules) — call the API and surface its `ProblemDetails` errors, matching the pattern established in `login.ts`/`register.ts` and carried through `subscription-form.ts`.
-- With all 10 milestones done, treat this as a fresh scoping conversation rather than an implied next-milestone continuation: confirm with the user whether they want the §6 "also still outstanding" stretch items (Category/Tag/PaymentMethod CRUD, 2FA, sessions, attachments, reports export), Docker verification, or something else entirely before starting new work.
+- With all 10 milestones done and Category/Tag/PaymentMethod CRUD also done, treat this as a fresh scoping conversation rather than an implied next-milestone continuation: confirm with the user whether they want the remaining §6 stretch items (2FA, sessions, attachments, reports export, Budget/Workspace CRUD), Docker verification, or something else entirely before starting new work.
+- The Category/Tag/PaymentMethod slice is a clean template to copy for Budget/Workspace CRUD: one DTO + one internal `*Projections` expression per entity, one folder per command/query under `Application/Catalog/<Entity>/<Operation>/`, a thin `*Controller` with `[HasPermission(...)]` per action, and (for entities with a uniqueness constraint) a `Specification<T>` for the duplicate-name check. No changes needed to `DependencyInjection.AddApplication` — MediatR/FluentValidation registration is assembly-scan based, so new handlers/validators just need to exist in the right namespace.
