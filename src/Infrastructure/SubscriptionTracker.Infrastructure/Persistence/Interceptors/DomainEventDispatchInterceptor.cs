@@ -36,7 +36,9 @@ public sealed class DomainEventDispatchInterceptor(IPublisher publisher) : SaveC
 
         foreach (var domainEvent in domainEvents)
         {
-            await publisher.Publish(domainEvent, cancellationToken);
+            var notificationType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
+            var notification = (INotification)Activator.CreateInstance(notificationType, domainEvent)!;
+            await publisher.Publish(notification, cancellationToken);
         }
     }
 }

@@ -41,7 +41,7 @@ public class RegisterUserCommandHandlerTests
         _roleRepository.Received(1).Add(Arg.Any<Role>());
         _workspaceRepository.Received(1).Add(Arg.Any<Workspace>());
         await _emailSender.Received(1).SendEmailVerificationAsync(
-            "jane@example.com", "Jane Doe", Arg.Any<string>(), Arg.Any<CancellationToken>());
+            "jane@example.com", "Jane Doe", Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

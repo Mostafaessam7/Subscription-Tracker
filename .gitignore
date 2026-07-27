@@ -14,8 +14,7 @@ npm-debug.log*
 ## Environment / secrets
 *.env
 appsettings.*.local.json
-**/appsettings.Development.json
-!**/appsettings.Development.json.example
+**/appsettings.Production.json
 
 ## Logs
 logs/

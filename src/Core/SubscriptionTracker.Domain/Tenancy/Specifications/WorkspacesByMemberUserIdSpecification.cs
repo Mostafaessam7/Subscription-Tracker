@@ -7,5 +7,6 @@ public sealed class WorkspacesByMemberUserIdSpecification : Specification<Worksp
     public WorkspacesByMemberUserIdSpecification(Guid userId)
     {
         AddCriteria(w => w.Members.Any(m => m.UserId == userId && m.Status == WorkspaceMemberStatus.Active));
+        AddInclude(w => w.Members);
     }
 }

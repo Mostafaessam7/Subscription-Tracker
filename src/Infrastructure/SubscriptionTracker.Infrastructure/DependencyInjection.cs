@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Domain.Common;
+using SubscriptionTracker.Infrastructure.Notifications;
 using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Interceptors;
 using SubscriptionTracker.Infrastructure.Persistence.Repositories;
+using SubscriptionTracker.Infrastructure.Security;
 
 namespace SubscriptionTracker.Infrastructure;
 
@@ -36,6 +38,13 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;
     }

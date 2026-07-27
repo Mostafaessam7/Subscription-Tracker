@@ -4,7 +4,9 @@ namespace SubscriptionTracker.Domain.Identity;
 
 public sealed class Role : AuditableAggregateRoot<Guid>
 {
-    private readonly HashSet<string> _permissions = [];
+    // EF Core's primitive-collection value comparer requires an ordered IList<T>, so this is a List
+    // with manual deduplication rather than a HashSet, even though it is semantically a set.
+    private readonly List<string> _permissions = [];
 
     private Role(Guid id, Guid? workspaceId, string name, string? description, bool isSystemRole)
         : base(id)
@@ -61,7 +63,11 @@ public sealed class Role : AuditableAggregateRoot<Guid>
             return Result.Failure(Error.Validation("Role.UnknownPermission", $"Unknown permission code '{permissionCode}'."));
         }
 
-        _permissions.Add(permissionCode);
+        if (!_permissions.Contains(permissionCode))
+        {
+            _permissions.Add(permissionCode);
+        }
+
         return Result.Success();
     }
 

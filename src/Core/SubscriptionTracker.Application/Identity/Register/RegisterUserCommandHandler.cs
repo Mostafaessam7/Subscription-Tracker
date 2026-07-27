@@ -79,7 +79,7 @@ public sealed class RegisterUserCommandHandler(
         roleRepository.Add(role);
         workspaceRepository.Add(workspaceResult.Value);
 
-        await emailSender.SendEmailVerificationAsync(user.Email.Value, user.FullName, rawVerificationToken, cancellationToken);
+        await emailSender.SendEmailVerificationAsync(user.Email.Value, user.FullName, user.Id, rawVerificationToken, cancellationToken);
 
         return new RegisterUserResponse(user.Id, workspaceResult.Value.Id);
     }

@@ -9,8 +9,10 @@ internal sealed class Repository<TAggregate, TId>(ApplicationDbContext dbContext
 {
     private readonly DbSet<TAggregate> _dbSet = dbContext.Set<TAggregate>();
 
+    // A plain query (not FindAsync) is used so that AutoInclude()-configured navigations are always loaded,
+    // matching the DDD expectation that fetching an aggregate root loads its full consistency boundary.
     public async Task<TAggregate?> GetByIdAsync(TId id, CancellationToken cancellationToken = default) =>
-        await _dbSet.FindAsync([id], cancellationToken);
+        await _dbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 
     public async Task<TAggregate?> FirstOrDefaultAsync(Specification<TAggregate> specification, CancellationToken cancellationToken = default) =>
         await SpecificationEvaluator.Apply(_dbSet.AsQueryable(), specification).FirstOrDefaultAsync(cancellationToken);

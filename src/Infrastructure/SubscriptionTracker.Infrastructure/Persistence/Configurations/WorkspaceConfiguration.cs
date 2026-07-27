@@ -36,6 +36,6 @@ internal sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspac
             .HasForeignKey(m => m.WorkspaceId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(w => w.Members).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(w => w.Members).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
     }
 }

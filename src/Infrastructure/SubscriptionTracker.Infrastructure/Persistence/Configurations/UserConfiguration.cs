@@ -38,13 +38,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(u => u.RefreshTokens).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(u => u.RefreshTokens).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
         builder.HasMany(u => u.VerificationTokens)
             .WithOne()
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(u => u.VerificationTokens).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(u => u.VerificationTokens).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
     }
 }
