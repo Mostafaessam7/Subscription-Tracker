@@ -1,0 +1,58 @@
+<div class="auth-page">
+  @if (registered()) {
+    <div class="auth-card">
+      <h1>{{ 'auth.login.title' | translate }}</h1>
+      <p>{{ 'auth.register.success' | translate }}</p>
+      <a routerLink="/auth/login" class="primary-button">{{ 'auth.register.loginLink' | translate }}</a>
+    </div>
+  } @else {
+    <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h1>{{ 'auth.register.title' | translate }}</h1>
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+      }
+
+      <label class="field">
+        <span>{{ 'auth.register.firstName' | translate }}</span>
+        <input type="text" formControlName="firstName" autocomplete="given-name" />
+        @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+          <small class="field-error">{{ 'validation.required' | translate }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>{{ 'auth.register.lastName' | translate }}</span>
+        <input type="text" formControlName="lastName" autocomplete="family-name" />
+        @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+          <small class="field-error">{{ 'validation.required' | translate }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>{{ 'auth.register.email' | translate }}</span>
+        <input type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <small class="field-error">{{ 'validation.email' | translate }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>{{ 'auth.register.password' | translate }}</span>
+        <input type="password" formControlName="password" autocomplete="new-password" />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <small class="field-error">{{ 'validation.minLength' | translate: '8' }}</small>
+        }
+      </label>
+
+      <button type="submit" class="primary-button" [disabled]="isSubmitting()">
+        {{ 'auth.register.submit' | translate }}
+      </button>
+
+      <p class="auth-footer">
+        {{ 'auth.register.hasAccount' | translate }}
+        <a routerLink="/auth/login">{{ 'auth.register.loginLink' | translate }}</a>
+      </p>
+    </form>
+  }
+</div>

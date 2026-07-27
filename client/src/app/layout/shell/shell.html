@@ -1,0 +1,28 @@
+<div class="shell">
+  <aside class="sidenav">
+    <div class="brand">{{ 'app.name' | translate }}</div>
+    <nav>
+      <a routerLink="/dashboard" routerLinkActive="active">{{ 'nav.dashboard' | translate }}</a>
+      <a routerLink="/subscriptions" routerLinkActive="active">{{ 'nav.subscriptions' | translate }}</a>
+      <a routerLink="/reports" routerLinkActive="active">{{ 'nav.reports' | translate }}</a>
+      <a routerLink="/settings" routerLinkActive="active">{{ 'nav.settings' | translate }}</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <button type="button" class="icon-button" (click)="switchLocale()" [title]="translationService.locale()">
+        {{ translationService.locale() === 'en' ? 'AR' : 'EN' }}
+      </button>
+      <button type="button" class="icon-button" (click)="themeService.toggle()" [attr.aria-label]="'theme.toggle' | translate">
+        {{ themeService.theme() === 'dark' ? '☀' : '☾' }}
+      </button>
+      <button type="button" class="icon-button" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

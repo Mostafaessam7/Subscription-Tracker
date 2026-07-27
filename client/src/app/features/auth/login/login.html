@@ -1,0 +1,34 @@
+<div class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>{{ 'auth.login.title' | translate }}</h1>
+
+    @if (errorMessage()) {
+      <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+    }
+
+    <label class="field">
+      <span>{{ 'auth.login.email' | translate }}</span>
+      <input type="email" formControlName="email" autocomplete="email" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <small class="field-error">{{ 'validation.email' | translate }}</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>{{ 'auth.login.password' | translate }}</span>
+      <input type="password" formControlName="password" autocomplete="current-password" />
+      @if (form.controls.password.invalid && form.controls.password.touched) {
+        <small class="field-error">{{ 'validation.required' | translate }}</small>
+      }
+    </label>
+
+    <button type="submit" class="primary-button" [disabled]="isSubmitting()">
+      {{ 'auth.login.submit' | translate }}
+    </button>
+
+    <p class="auth-footer">
+      {{ 'auth.login.noAccount' | translate }}
+      <a routerLink="/auth/register">{{ 'auth.login.registerLink' | translate }}</a>
+    </p>
+  </form>
+</div>
