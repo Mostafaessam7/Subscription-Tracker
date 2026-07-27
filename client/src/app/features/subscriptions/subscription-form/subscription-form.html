@@ -1,0 +1,97 @@
+<div class="subscription-form-page">
+  <a routerLink="/subscriptions" class="back-link">{{ 'subscriptions.backToList' | translate }}</a>
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else {
+    <form class="form-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h1>{{ (isEditMode() ? 'subscriptions.editTitle' : 'subscriptions.createTitle') | translate }}</h1>
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+      }
+
+      <label class="field">
+        <span>{{ 'subscriptions.name' | translate }}</span>
+        <input type="text" formControlName="name" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <small class="field-error">{{ 'validation.required' | translate }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>{{ 'subscriptions.provider' | translate }}</span>
+        <input type="text" formControlName="provider" />
+        @if (form.controls.provider.invalid && form.controls.provider.touched) {
+          <small class="field-error">{{ 'validation.required' | translate }}</small>
+        }
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>{{ 'subscriptions.amount' | translate }}</span>
+          <input type="number" step="0.01" formControlName="amount" />
+          @if (form.controls.amount.invalid && form.controls.amount.touched) {
+            <small class="field-error">{{ 'validation.required' | translate }}</small>
+          }
+        </label>
+
+        <label class="field">
+          <span>{{ 'subscriptions.currency' | translate }}</span>
+          <input type="text" formControlName="currencyCode" maxlength="3" />
+        </label>
+      </div>
+
+      @if (!isEditMode()) {
+        <div class="field-row">
+          <label class="field">
+            <span>{{ 'subscriptions.billingFrequency' | translate }}</span>
+            <select formControlName="billingFrequency">
+              @for (option of billingFrequencyOptions; track option) {
+                <option [ngValue]="option">{{ 'subscriptions.frequency.' + option | translate }}</option>
+              }
+            </select>
+          </label>
+
+          @if (form.controls.billingFrequency.value === BillingFrequency.Custom) {
+            <label class="field">
+              <span>{{ 'subscriptions.customIntervalDays' | translate }}</span>
+              <input type="number" formControlName="customIntervalDays" />
+            </label>
+          }
+        </div>
+
+        <div class="field-row">
+          <label class="field">
+            <span>{{ 'subscriptions.startDate' | translate }}</span>
+            <input type="date" formControlName="startDate" />
+          </label>
+
+          <label class="field">
+            <span>{{ 'subscriptions.trialEndDate' | translate }}</span>
+            <input type="date" formControlName="trialEndDate" />
+          </label>
+        </div>
+
+        <label class="checkbox-field">
+          <input type="checkbox" formControlName="autoRenewal" />
+          <span>{{ 'subscriptions.autoRenewal' | translate }}</span>
+        </label>
+      }
+
+      <label class="field">
+        <span>{{ 'subscriptions.website' | translate }}</span>
+        <input type="url" formControlName="websiteUrl" />
+      </label>
+
+      <label class="field">
+        <span>{{ 'subscriptions.notes' | translate }}</span>
+        <textarea formControlName="notes" rows="3"></textarea>
+      </label>
+
+      <button type="submit" class="primary-button" [disabled]="isSubmitting()">
+        {{ (isEditMode() ? 'subscriptions.save' : 'subscriptions.create') | translate }}
+      </button>
+    </form>
+  }
+</div>

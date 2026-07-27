@@ -1,0 +1,76 @@
+<div class="subscription-detail-page">
+  <a routerLink="/subscriptions" class="back-link">{{ 'subscriptions.backToList' | translate }}</a>
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else if (errorMessage() && !subscription()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  } @else if (subscription()) {
+    <header class="page-header">
+      <div>
+        <h1>{{ subscription()!.name }}</h1>
+        <p class="provider">{{ subscription()!.provider }}</p>
+      </div>
+      <span class="status-badge" [attr.data-status]="subscription()!.status">
+        {{ 'subscriptions.status.' + subscription()!.status | translate }}
+      </span>
+    </header>
+
+    @if (errorMessage()) {
+      <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+    }
+
+    <div class="detail-grid">
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.amount' | translate }}</span>
+        <span>{{ subscription()!.amount }} {{ subscription()!.currencyCode }}</span>
+      </div>
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.startDate' | translate }}</span>
+        <span>{{ subscription()!.startDate }}</span>
+      </div>
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.nextRenewal' | translate }}</span>
+        <span>{{ subscription()!.nextRenewalDate ?? '—' }}</span>
+      </div>
+      <div class="detail-field">
+        <span class="label">{{ 'subscriptions.autoRenewal' | translate }}</span>
+        <span>{{ (subscription()!.autoRenewal ? 'common.yes' : 'common.no') | translate }}</span>
+      </div>
+      @if (subscription()!.websiteUrl) {
+        <div class="detail-field">
+          <span class="label">{{ 'subscriptions.website' | translate }}</span>
+          <a [href]="subscription()!.websiteUrl" target="_blank" rel="noopener">{{ subscription()!.websiteUrl }}</a>
+        </div>
+      }
+      @if (subscription()!.notes) {
+        <div class="detail-field full-width">
+          <span class="label">{{ 'subscriptions.notes' | translate }}</span>
+          <span>{{ subscription()!.notes }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary-button" (click)="goToEdit()" [disabled]="isActionInProgress()">
+        {{ 'subscriptions.edit' | translate }}
+      </button>
+
+      @if (subscription()!.status === SubscriptionStatus.Active) {
+        <button type="button" class="secondary-button" (click)="pause()" [disabled]="isActionInProgress()">
+          {{ 'subscriptions.pause' | translate }}
+        </button>
+      }
+      @if (subscription()!.status === SubscriptionStatus.Paused) {
+        <button type="button" class="secondary-button" (click)="resume()" [disabled]="isActionInProgress()">
+          {{ 'subscriptions.resume' | translate }}
+        </button>
+      }
+      @if (subscription()!.status !== SubscriptionStatus.Cancelled && subscription()!.status !== SubscriptionStatus.Expired) {
+        <button type="button" class="danger-button" (click)="cancel()" [disabled]="isActionInProgress()">
+          {{ 'subscriptions.cancel' | translate }}
+        </button>
+      }
+    </div>
+  }
+</div>

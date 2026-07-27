@@ -1,0 +1,72 @@
+<div class="subscriptions-page">
+  <header class="page-header">
+    <h1>{{ 'nav.subscriptions' | translate }}</h1>
+    <a routerLink="/subscriptions/new" class="primary-button">{{ 'subscriptions.create' | translate }}</a>
+  </header>
+
+  <div class="filters">
+    <input
+      type="search"
+      class="search-input"
+      [(ngModel)]="searchTerm"
+      (keyup.enter)="applyFilters()"
+      [placeholder]="'subscriptions.searchPlaceholder' | translate"
+    />
+
+    <select [(ngModel)]="status" (ngModelChange)="applyFilters()">
+      <option [ngValue]="''">{{ 'subscriptions.allStatuses' | translate }}</option>
+      @for (option of statusOptions; track option) {
+        <option [ngValue]="option">{{ 'subscriptions.status.' + option | translate }}</option>
+      }
+    </select>
+
+    <button type="button" class="secondary-button" (click)="applyFilters()">
+      {{ 'subscriptions.search' | translate }}
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else if (page() && page()!.items.length === 0) {
+    <p>{{ 'subscriptions.empty' | translate }}</p>
+  } @else if (page()) {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sort('name')" class="sortable">{{ 'subscriptions.name' | translate }}</th>
+          <th (click)="sort('amount')" class="sortable">{{ 'subscriptions.amount' | translate }}</th>
+          <th (click)="sort('nextrenewaldate')" class="sortable">{{ 'subscriptions.nextRenewal' | translate }}</th>
+          <th>{{ 'subscriptions.status.label' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (subscription of page()!.items; track subscription.id) {
+          <tr (click)="openDetail(subscription.id)" class="clickable-row">
+            <td>{{ subscription.name }}</td>
+            <td>{{ subscription.amount }} {{ subscription.currencyCode }}</td>
+            <td>{{ subscription.nextRenewalDate ?? '—' }}</td>
+            <td>
+              <span class="status-badge" [attr.data-status]="subscription.status">
+                {{ 'subscriptions.status.' + subscription.status | translate }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      <button type="button" [disabled]="!page()!.hasPreviousPage" (click)="goToPage(pageNumber - 1)">
+        {{ 'common.previous' | translate }}
+      </button>
+      <span>{{ page()!.pageNumber }} / {{ page()!.totalPages || 1 }}</span>
+      <button type="button" [disabled]="!page()!.hasNextPage" (click)="goToPage(pageNumber + 1)">
+        {{ 'common.next' | translate }}
+      </button>
+    </div>
+  }
+</div>

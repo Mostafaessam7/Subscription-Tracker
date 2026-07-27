@@ -1,0 +1,61 @@
+<div class="dashboard-page">
+  <h1>{{ 'nav.dashboard' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">{{ 'dashboard.activeSubscriptions' | translate }}</span>
+        <span class="kpi-value">{{ activeCount() }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">{{ 'dashboard.trialSubscriptions' | translate }}</span>
+        <span class="kpi-value">{{ trialCount() }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">{{ 'dashboard.estimatedMonthlySpend' | translate }}</span>
+        <span class="kpi-value">{{ estimatedMonthlySpend() | number: '1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="panels">
+      <section class="panel">
+        <h2>{{ 'dashboard.upcomingRenewals' | translate }}</h2>
+        @if (upcomingRenewals().length === 0) {
+          <p>{{ 'dashboard.noUpcomingRenewals' | translate }}</p>
+        } @else {
+          <ul class="renewal-list">
+            @for (subscription of upcomingRenewals(); track subscription.id) {
+              <li>
+                <a [routerLink]="['/subscriptions', subscription.id]">{{ subscription.name }}</a>
+                <span>{{ subscription.nextRenewalDate }}</span>
+                <span>{{ subscription.amount }} {{ subscription.currencyCode }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="panel">
+        <h2>{{ 'dashboard.spendByFrequency' | translate }}</h2>
+        @if (spendByFrequency().length === 0) {
+          <p>{{ 'dashboard.noSubscriptions' | translate }}</p>
+        } @else {
+          <ul class="breakdown-list">
+            @for (entry of spendByFrequency(); track entry.frequency) {
+              <li>
+                <span>{{ 'subscriptions.frequency.' + entry.frequency | translate }}</span>
+                <span>{{ entry.count }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  }
+</div>

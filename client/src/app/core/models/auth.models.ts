@@ -30,6 +30,21 @@ export interface RegisterResponse {
   workspaceId: string;
 }
 
+export interface VerifyEmailRequest {
+  userId: string;
+  token: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  token: string;
+  newPassword: string;
+}
+
 export interface ProblemDetails {
   title?: string;
   detail?: string;

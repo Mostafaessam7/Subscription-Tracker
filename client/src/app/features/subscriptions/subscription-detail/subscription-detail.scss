@@ -1,0 +1,74 @@
+.subscription-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 720px;
+}
+
+.back-link {
+  font-size: 0.9rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.4rem;
+  }
+
+  .provider {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+}
+
+.status-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background-color: var(--color-border);
+  white-space: nowrap;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.danger-button {
+  border: 1px solid var(--color-danger, #d1394a);
+  color: var(--color-danger, #d1394a);
+  background: transparent;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
