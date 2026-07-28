@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SubscriptionTracker.Api;
+using SubscriptionTracker.Api.Startup;
 using SubscriptionTracker.Application;
 using SubscriptionTracker.Infrastructure;
 using SubscriptionTracker.Infrastructure.Persistence;
@@ -22,6 +23,8 @@ builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration);
+
+ProductionSecretsGuard.EnsureJwtSigningKeyIsConfigured(builder.Configuration, builder.Environment.IsProduction());
 
 var app = builder.Build();
 

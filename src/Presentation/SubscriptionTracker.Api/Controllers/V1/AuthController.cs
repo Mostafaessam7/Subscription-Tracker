@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SubscriptionTracker.Api.Contracts.Auth;
 using SubscriptionTracker.Api.Extensions;
 using SubscriptionTracker.Application.Identity.ChangePassword;
@@ -80,6 +81,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
 
     [HttpPost("verify-email")]
     [AllowAnonymous]
+    [EnableRateLimiting(DependencyInjection.AuthSensitivePolicy)]
     public async Task<IActionResult> VerifyEmail(VerifyEmailRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new VerifyEmailCommand(request.UserId, request.Token), cancellationToken);
@@ -88,6 +90,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
 
     [HttpPost("forgot-password")]
     [AllowAnonymous]
+    [EnableRateLimiting(DependencyInjection.AuthSensitivePolicy)]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
@@ -96,6 +99,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
+    [EnableRateLimiting(DependencyInjection.AuthSensitivePolicy)]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         var command = new ResetPasswordCommand(request.UserId, request.Token, request.NewPassword);
