@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionTracker.Api.Authorization;
 using SubscriptionTracker.Api.Contracts.Subscriptions;
@@ -9,11 +10,14 @@ using SubscriptionTracker.Domain.Identity;
 using SubscriptionTracker.Domain.Subscriptions.Enums;
 using SubscriptionTracker.Application.Subscriptions.CancelSubscription;
 using SubscriptionTracker.Application.Subscriptions.CreateSubscription;
+using SubscriptionTracker.Application.Subscriptions.DeleteAttachment;
+using SubscriptionTracker.Application.Subscriptions.DownloadAttachment;
 using SubscriptionTracker.Application.Subscriptions.GetSubscriptionById;
 using SubscriptionTracker.Application.Subscriptions.GetSubscriptions;
 using SubscriptionTracker.Application.Subscriptions.PauseSubscription;
 using SubscriptionTracker.Application.Subscriptions.ResumeSubscription;
 using SubscriptionTracker.Application.Subscriptions.UpdateSubscription;
+using SubscriptionTracker.Application.Subscriptions.UploadAttachment;
 
 namespace SubscriptionTracker.Api.Controllers.V1;
 
@@ -96,6 +100,37 @@ public sealed class SubscriptionsController(ISender sender) : ControllerBase
     public async Task<IActionResult> Resume(Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new ResumeSubscriptionCommand(id), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{id:guid}/attachments")]
+    [HasPermission(Permissions.Subscriptions.Edit)]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> UploadAttachment(Guid id, IFormFile file, CancellationToken cancellationToken)
+    {
+        await using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, cancellationToken);
+
+        var command = new UploadAttachmentCommand(id, file.FileName, file.ContentType, stream.ToArray());
+        var result = await sender.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{id:guid}/attachments/{attachmentId:guid}")]
+    [HasPermission(Permissions.Subscriptions.View)]
+    public async Task<IActionResult> DownloadAttachment(Guid id, Guid attachmentId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new DownloadAttachmentQuery(id, attachmentId), cancellationToken);
+        return result.IsSuccess
+            ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName)
+            : result.ToActionResult(this);
+    }
+
+    [HttpDelete("{id:guid}/attachments/{attachmentId:guid}")]
+    [HasPermission(Permissions.Subscriptions.Edit)]
+    public async Task<IActionResult> DeleteAttachment(Guid id, Guid attachmentId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new DeleteAttachmentCommand(id, attachmentId), cancellationToken);
         return result.ToActionResult(this);
     }
 }

@@ -98,4 +98,38 @@ public class UserTests
 
         result.IsFailure.Should().BeTrue();
     }
+
+    [Fact]
+    public void IssueRefreshToken_ThenRevokeById_ShouldMarkTokenInactive()
+    {
+        var user = CreateUser();
+        var token = user.IssueRefreshToken("token-hash", DateTimeOffset.UtcNow.AddDays(7), "127.0.0.1");
+
+        var result = user.RevokeRefreshTokenById(token.Id, "127.0.0.1");
+
+        result.IsSuccess.Should().BeTrue();
+        token.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RevokeRefreshTokenById_WhenNotFound_ShouldFail()
+    {
+        var user = CreateUser();
+
+        var result = user.RevokeRefreshTokenById(Guid.NewGuid(), "127.0.0.1");
+
+        result.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RevokeRefreshTokenById_WhenAlreadyRevoked_ShouldFail()
+    {
+        var user = CreateUser();
+        var token = user.IssueRefreshToken("token-hash", DateTimeOffset.UtcNow.AddDays(7), "127.0.0.1");
+        user.RevokeRefreshTokenById(token.Id, "127.0.0.1");
+
+        var result = user.RevokeRefreshTokenById(token.Id, "127.0.0.1");
+
+        result.IsFailure.Should().BeTrue();
+    }
 }

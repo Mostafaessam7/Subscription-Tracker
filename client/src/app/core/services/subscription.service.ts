@@ -54,4 +54,18 @@ export class SubscriptionService {
   resume(id: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${id}/resume`, {});
   }
+
+  uploadAttachment(id: string, file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<string>(`${this.baseUrl}/${id}/attachments`, formData);
+  }
+
+  downloadAttachment(id: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/attachments/${attachmentId}`, { responseType: 'blob' });
+  }
+
+  deleteAttachment(id: string, attachmentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}/attachments/${attachmentId}`);
+  }
 }

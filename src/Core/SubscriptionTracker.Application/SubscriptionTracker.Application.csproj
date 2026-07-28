@@ -17,6 +17,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Mapster" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="ClosedXML" />
   </ItemGroup>
 
 </Project>

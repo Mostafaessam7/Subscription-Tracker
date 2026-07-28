@@ -65,6 +65,29 @@
       }
     </div>
 
+    <section class="attachments-section">
+      <h2>{{ 'subscriptions.attachments' | translate }}</h2>
+      <ul class="attachment-list">
+        @for (attachment of subscription()!.attachments; track attachment.id) {
+          <li>
+            <button type="button" class="link-button" (click)="downloadAttachment(attachment.id, attachment.fileName)">
+              {{ attachment.fileName }}
+            </button>
+            <span class="attachment-meta">{{ attachment.sizeBytes | number }} B</span>
+            <button type="button" class="link-button danger" (click)="deleteAttachment(attachment.id)">
+              {{ 'settings.delete' | translate }}
+            </button>
+          </li>
+        } @empty {
+          <li class="empty-row">{{ 'subscriptions.noAttachments' | translate }}</li>
+        }
+      </ul>
+      <label class="upload-button">
+        <input type="file" (change)="onFileSelected($event)" [disabled]="isActionInProgress()" />
+        {{ 'subscriptions.uploadAttachment' | translate }}
+      </label>
+    </section>
+
     <div class="actions">
       <button type="button" class="secondary-button" (click)="goToEdit()" [disabled]="isActionInProgress()">
         {{ 'subscriptions.edit' | translate }}

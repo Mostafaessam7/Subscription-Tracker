@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
@@ -9,7 +10,7 @@ import { Category, PaymentMethod, Tag } from '../../../core/models/catalog.model
 @Component({
   selector: 'app-subscription-detail',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, DecimalPipe],
   templateUrl: './subscription-detail.html',
   styleUrl: './subscription-detail.scss',
 })
@@ -116,5 +117,48 @@ export class SubscriptionDetail implements OnInit {
 
   goToEdit(): void {
     void this.router.navigate(['/subscriptions', this.id, 'edit']);
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    this.isActionInProgress.set(true);
+    this.subscriptionService.uploadAttachment(this.id, file).subscribe({
+      next: () => {
+        this.isActionInProgress.set(false);
+        input.value = '';
+        this.load();
+      },
+      error: () => {
+        this.isActionInProgress.set(false);
+        input.value = '';
+        this.errorMessage.set('error.generic');
+      },
+    });
+  }
+
+  downloadAttachment(attachmentId: string, fileName: string): void {
+    this.subscriptionService.downloadAttachment(this.id, attachmentId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('error.generic'),
+    });
+  }
+
+  deleteAttachment(attachmentId: string): void {
+    this.subscriptionService.deleteAttachment(this.id, attachmentId).subscribe({
+      next: () => this.load(),
+      error: () => this.errorMessage.set('error.generic'),
+    });
   }
 }

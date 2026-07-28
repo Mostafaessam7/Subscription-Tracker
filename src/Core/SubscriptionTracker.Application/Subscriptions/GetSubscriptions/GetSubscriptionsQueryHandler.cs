@@ -13,28 +13,7 @@ public sealed class GetSubscriptionsQueryHandler(IApplicationDbContext dbContext
     public async Task<Result<PagedList<SubscriptionDto>>> Handle(GetSubscriptionsQuery request, CancellationToken cancellationToken)
     {
         var query = dbContext.Subscriptions.Where(s => s.WorkspaceId == currentUserService.WorkspaceId);
-
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            var term = request.SearchTerm.Trim();
-            query = query.Where(s => EF.Functions.Like(s.Name, $"%{term}%") || EF.Functions.Like(s.Provider, $"%{term}%"));
-        }
-
-        if (request.CategoryId is not null)
-        {
-            query = query.Where(s => s.CategoryId == request.CategoryId);
-        }
-
-        if (request.TagId is not null)
-        {
-            query = query.Where(s => s.TagIds.Contains(request.TagId.Value));
-        }
-
-        if (request.Status is not null)
-        {
-            query = query.Where(s => s.Status == request.Status);
-        }
-
+        query = SubscriptionFilters.Apply(query, request.SearchTerm, request.CategoryId, request.TagId, request.Status);
         query = ApplySorting(query, request.SortBy, request.SortDescending);
 
         var totalCount = await query.CountAsync(cancellationToken);

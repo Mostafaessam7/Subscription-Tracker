@@ -33,6 +33,10 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
       { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
+      { path: 'budgets', loadComponent: () => import('./features/budgets/budgets').then((m) => m.Budgets) },
+      { path: 'workspace', loadComponent: () => import('./features/workspace/workspace').then((m) => m.Workspace) },
+      { path: 'security', loadComponent: () => import('./features/security/security').then((m) => m.Security) },
+      { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
       {
         path: 'subscriptions',
         children: [

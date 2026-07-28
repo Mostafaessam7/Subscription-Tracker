@@ -36,6 +36,15 @@ export interface Subscription {
   status: SubscriptionStatus;
   tagIds: string[];
   sharedUserIds: string[];
+  attachments: SubscriptionAttachment[];
+}
+
+export interface SubscriptionAttachment {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedAtUtc: string;
 }
 
 export interface PagedList<T> {
