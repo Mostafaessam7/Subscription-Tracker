@@ -1,0 +1,7 @@
+namespace SubscriptionTracker.Api.Contracts.Tenancy;
+
+public sealed record UpdateWorkspaceSettingsRequest(string DefaultCurrencyCode, string TimeZoneId, string Locale);
+
+public sealed record InviteMemberRequest(string Email, Guid RoleId);
+
+public sealed record ChangeMemberRoleRequest(Guid RoleId);

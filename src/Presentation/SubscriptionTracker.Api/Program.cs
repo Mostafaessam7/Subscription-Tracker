@@ -7,6 +7,7 @@ using SubscriptionTracker.Api;
 using SubscriptionTracker.Application;
 using SubscriptionTracker.Infrastructure;
 using SubscriptionTracker.Infrastructure.Persistence;
+using SubscriptionTracker.Infrastructure.Persistence.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,7 @@ if (builder.Configuration.GetValue("ApplyMigrationsOnStartup", defaultValue: tru
     using var migrationScope = app.Services.CreateScope();
     var dbContext = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
+    await SystemRoleSeeder.SeedAsync(dbContext);
 }
 
 app.UseExceptionHandler();
