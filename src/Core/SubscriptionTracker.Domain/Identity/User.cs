@@ -152,6 +152,19 @@ public sealed class User : AuditableAggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>Used by the session-management UI, which only ever knows a token by its Id (never its raw hash).</summary>
+    public Result RevokeRefreshTokenById(Guid refreshTokenId, string? revokedByIp)
+    {
+        var token = _refreshTokens.FirstOrDefault(t => t.Id == refreshTokenId);
+        if (token is null || !token.IsActive)
+        {
+            return Result.Failure(Error.NotFound("User.RefreshTokenNotFound", "Active refresh token was not found."));
+        }
+
+        token.Revoke(revokedByIp);
+        return Result.Success();
+    }
+
     public void RevokeAllRefreshTokens(string? revokedByIp)
     {
         foreach (var token in _refreshTokens.Where(t => t.IsActive))
