@@ -1,6 +1,7 @@
 export interface LoginRequest {
   email: string;
   password: string;
+  totpCode?: string | null;
 }
 
 export interface RegisterRequest {

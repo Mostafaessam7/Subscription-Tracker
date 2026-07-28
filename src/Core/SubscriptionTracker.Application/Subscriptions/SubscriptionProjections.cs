@@ -25,5 +25,6 @@ internal static class SubscriptionProjections
         s.AutoRenewal,
         s.Status,
         s.TagIds,
-        s.SharedUserIds);
+        s.SharedUserIds,
+        s.Attachments.Select(a => new SubscriptionAttachmentDto(a.Id, a.FileName, a.ContentType, a.SizeBytes, a.UploadedAtUtc)).ToList());
 }

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { ProblemDetails } from '../../../core/models/auth.models';
 
 @Component({
   selector: 'app-login',
@@ -19,15 +20,24 @@ export class Login {
 
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly requiresTwoFactor = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
+    totpCode: [''],
   });
 
   submit(): void {
-    if (this.form.invalid || this.isSubmitting()) {
+    const isTotpStep = this.requiresTwoFactor();
+
+    if (this.form.controls.email.invalid || this.form.controls.password.invalid || this.isSubmitting()) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    if (isTotpStep && !/^\d{6}$/.test(this.form.controls.totpCode.value)) {
+      this.form.controls.totpCode.markAsTouched();
       return;
     }
 
@@ -41,6 +51,20 @@ export class Login {
       },
       error: (error: unknown) => {
         this.isSubmitting.set(false);
+
+        if (error instanceof HttpErrorResponse) {
+          const problem = error.error as ProblemDetails | undefined;
+          if (problem?.title === 'Login.TwoFactorRequired') {
+            this.requiresTwoFactor.set(true);
+            this.errorMessage.set(null);
+            return;
+          }
+          if (problem?.title === 'Login.InvalidTwoFactorCode') {
+            this.errorMessage.set('auth.login.invalidTwoFactorCode');
+            return;
+          }
+        }
+
         this.errorMessage.set(
           error instanceof HttpErrorResponse && error.status === 401 ? 'auth.login.error' : 'error.generic',
         );

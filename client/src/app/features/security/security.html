@@ -1,0 +1,72 @@
+<div class="security-page">
+  <h1>{{ 'nav.security' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+  @if (successMessage()) {
+    <p class="success-message">{{ successMessage()! | translate }}</p>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else if (currentUser(); as user) {
+    <section class="panel">
+      <h2>{{ 'security.twoFactor.title' | translate }}</h2>
+
+      @if (user.twoFactorEnabled) {
+        <p class="status-line">
+          <span class="status-dot enabled"></span>
+          {{ 'security.twoFactor.currentlyEnabled' | translate }}
+        </p>
+
+        <form class="inline-form" [formGroup]="disableForm" (ngSubmit)="confirmDisable()" novalidate>
+          <input type="text" formControlName="code" [placeholder]="'security.twoFactor.codePlaceholder' | translate" maxlength="6" />
+          <button type="submit" class="danger-button" [disabled]="isSubmitting()">
+            {{ 'security.twoFactor.disable' | translate }}
+          </button>
+        </form>
+      } @else if (setupInfo(); as info) {
+        <p>{{ 'security.twoFactor.scanInstructions' | translate }}</p>
+        <p class="secret-value">{{ info.secret }}</p>
+        <p class="uri-value">{{ info.provisioningUri }}</p>
+
+        <form class="inline-form" [formGroup]="enableForm" (ngSubmit)="confirmEnable()" novalidate>
+          <input type="text" formControlName="code" [placeholder]="'security.twoFactor.codePlaceholder' | translate" maxlength="6" />
+          <button type="submit" class="primary-button" [disabled]="isSubmitting()">
+            {{ 'security.twoFactor.confirm' | translate }}
+          </button>
+          <button type="button" class="secondary-button" (click)="cancelSetup()">{{ 'settings.cancel' | translate }}</button>
+        </form>
+      } @else {
+        <p class="status-line">
+          <span class="status-dot disabled"></span>
+          {{ 'security.twoFactor.currentlyDisabled' | translate }}
+        </p>
+        <button type="button" class="primary-button" (click)="startSetup()">
+          {{ 'security.twoFactor.setUp' | translate }}
+        </button>
+      }
+    </section>
+  }
+
+  <section class="panel">
+    <h2>{{ 'security.sessions.title' | translate }}</h2>
+    <ul class="session-list">
+      @for (session of sessions(); track session.id) {
+        <li>
+          <div class="session-info">
+            <span>{{ session.createdByIp || ('security.sessions.unknownIp' | translate) }}</span>
+            <span class="session-meta">{{ 'security.sessions.createdAt' | translate }}: {{ session.createdAtUtc | date: 'short' }}</span>
+            <span class="session-meta">{{ 'security.sessions.expiresAt' | translate }}: {{ session.expiresAtUtc | date: 'short' }}</span>
+          </div>
+          <button type="button" class="link-button danger" (click)="revokeSession(session)">
+            {{ 'security.sessions.revoke' | translate }}
+          </button>
+        </li>
+      } @empty {
+        <li class="empty-row">{{ 'security.sessions.empty' | translate }}</li>
+      }
+    </ul>
+  </section>
+</div>

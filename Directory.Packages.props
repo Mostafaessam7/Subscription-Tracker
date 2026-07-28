@@ -22,6 +22,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
 
     <!-- Auth -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
@@ -57,6 +58,9 @@
 
     <!-- Mapping -->
     <PackageVersion Include="Mapster" Version="7.4.0" />
+
+    <!-- Reports export (.xlsx generation) -->
+    <PackageVersion Include="ClosedXML" Version="0.104.2" />
 
     <!-- Email -->
     <PackageVersion Include="MailKit" Version="4.17.0" />

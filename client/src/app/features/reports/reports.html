@@ -1,0 +1,46 @@
+<div class="reports-page">
+  <h1>{{ 'nav.reports' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  <section class="panel">
+    <h2>{{ 'reports.filters' | translate }}</h2>
+    <div class="filters">
+      <input
+        type="search"
+        class="search-input"
+        [(ngModel)]="searchTerm"
+        [placeholder]="'subscriptions.searchPlaceholder' | translate"
+      />
+
+      <select [(ngModel)]="categoryId">
+        <option [ngValue]="''">{{ 'budgets.allCategories' | translate }}</option>
+        @for (category of categories(); track category.id) {
+          <option [ngValue]="category.id">{{ category.name }}</option>
+        }
+      </select>
+
+      <select [(ngModel)]="status">
+        <option [ngValue]="''">{{ 'subscriptions.allStatuses' | translate }}</option>
+        @for (option of statusOptions; track option) {
+          <option [ngValue]="option">{{ 'subscriptions.status.' + option | translate }}</option>
+        }
+      </select>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>{{ 'reports.export' | translate }}</h2>
+    <p class="hint">{{ 'reports.exportHint' | translate }}</p>
+    <div class="export-actions">
+      <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportCsv()">
+        {{ 'reports.exportCsv' | translate }}
+      </button>
+      <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportExcel()">
+        {{ 'reports.exportExcel' | translate }}
+      </button>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,86 @@
+<div class="workspace-page">
+  <h1>{{ 'nav.workspace' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (pendingInvitations().length > 0) {
+    <section class="panel">
+      <h2>{{ 'workspace.pendingInvitations' | translate }}</h2>
+      <ul class="invitation-list">
+        @for (invitation of pendingInvitations(); track invitation.memberId) {
+          <li>
+            <span>{{ invitation.workspaceName }}</span>
+            <span class="role-name">{{ invitation.roleName }}</span>
+            <button type="button" class="primary-button" (click)="acceptInvitation(invitation)">
+              {{ 'workspace.accept' | translate }}
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else if (workspace(); as ws) {
+    <section class="panel">
+      <h2>{{ ws.name }}</h2>
+      <form class="inline-form" [formGroup]="settingsForm" (ngSubmit)="submitSettings()" novalidate>
+        <label class="field">
+          <span>{{ 'workspace.currency' | translate }}</span>
+          <input type="text" formControlName="defaultCurrencyCode" maxlength="3" />
+        </label>
+        <label class="field">
+          <span>{{ 'workspace.timeZone' | translate }}</span>
+          <input type="text" formControlName="timeZoneId" />
+        </label>
+        <label class="field">
+          <span>{{ 'workspace.locale' | translate }}</span>
+          <input type="text" formControlName="locale" />
+        </label>
+        <button type="submit" class="primary-button">{{ 'settings.save' | translate }}</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>{{ 'workspace.members' | translate }}</h2>
+      <ul class="member-list">
+        @for (member of ws.members; track member.memberId) {
+          <li>
+            <span class="member-name">{{ member.firstName }} {{ member.lastName }}</span>
+            <span class="member-email">{{ member.email }}</span>
+            @if (isOwner(member)) {
+              <span class="role-name">{{ 'workspace.owner' | translate }}</span>
+            } @else {
+              <select [value]="member.roleId" (change)="changeMemberRole(member, $any($event.target).value)">
+                @for (role of assignableRoles(); track role.id) {
+                  <option [value]="role.id" [selected]="role.id === member.roleId">{{ role.name }}</option>
+                }
+              </select>
+              <span class="status-badge">{{ member.status }}</span>
+              <button type="button" class="link-button danger" (click)="removeMember(member)">
+                {{ 'settings.delete' | translate }}
+              </button>
+            }
+          </li>
+        }
+      </ul>
+
+      <form class="inline-form" [formGroup]="inviteForm" (ngSubmit)="submitInvite()" novalidate>
+        @if (inviteSuccess()) {
+          <p class="invite-success">{{ 'workspace.inviteSuccess' | translate }}</p>
+        }
+        <input type="email" formControlName="email" [placeholder]="'workspace.invitePlaceholder' | translate" />
+        <select formControlName="roleId">
+          <option value="" disabled>{{ 'workspace.selectRole' | translate }}</option>
+          @for (role of assignableRoles(); track role.id) {
+            <option [value]="role.id">{{ role.name }}</option>
+          }
+        </select>
+        <button type="submit" class="primary-button">{{ 'workspace.invite' | translate }}</button>
+      </form>
+    </section>
+  }
+</div>

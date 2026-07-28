@@ -15,6 +15,7 @@ public sealed class LoginCommandHandler(
     IRepository<Role, Guid> roleRepository,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
+    ITwoFactorService twoFactorService,
     TimeProvider timeProvider)
     : ICommandHandler<LoginCommand, LoginResponse>
 {
@@ -53,6 +54,25 @@ public sealed class LoginCommandHandler(
         if (user.Status is UserStatus.Disabled)
         {
             return Result.Failure<LoginResponse>(Error.Unauthorized("Login.AccountDisabled", "This account has been disabled."));
+        }
+
+        if (user.TwoFactorEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(request.TotpCode))
+            {
+                // Password was correct but no code was supplied yet - the frontend should prompt for one and
+                // retry the same login call. Not a failed attempt: nothing wrong has been guessed yet.
+                return Result.Failure<LoginResponse>(
+                    Error.Validation("Login.TwoFactorRequired", "A verification code is required to complete sign-in."));
+            }
+
+            if (!twoFactorService.ValidateCode(user.TwoFactorSecret!, request.TotpCode))
+            {
+                user.RecordFailedLogin(now);
+                userRepository.Update(user);
+                return Result.Failure<LoginResponse>(
+                    Error.Unauthorized("Login.InvalidTwoFactorCode", "The verification code is incorrect."));
+            }
         }
 
         user.RecordSuccessfulLogin(now);

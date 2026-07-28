@@ -2,7 +2,11 @@ namespace SubscriptionTracker.Api.Contracts.Auth;
 
 public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, string? WorkspaceName);
 
-public sealed record LoginRequest(string Email, string Password);
+public sealed record LoginRequest(string Email, string Password, string? TotpCode = null);
+
+public sealed record EnableTwoFactorRequest(string Secret, string Code);
+
+public sealed record DisableTwoFactorRequest(string Code);
 
 public sealed record RefreshTokenRequest(string RefreshToken, Guid? WorkspaceId);
 

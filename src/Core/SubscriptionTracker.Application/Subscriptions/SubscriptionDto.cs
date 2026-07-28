@@ -22,4 +22,8 @@ public sealed record SubscriptionDto(
     bool AutoRenewal,
     SubscriptionStatus Status,
     IReadOnlyCollection<Guid> TagIds,
-    IReadOnlyCollection<Guid> SharedUserIds);
+    IReadOnlyCollection<Guid> SharedUserIds,
+    IReadOnlyCollection<SubscriptionAttachmentDto> Attachments);
+
+public sealed record SubscriptionAttachmentDto(
+    Guid Id, string FileName, string ContentType, long SizeBytes, DateTimeOffset UploadedAtUtc);

@@ -10,6 +10,7 @@ using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Interceptors;
 using SubscriptionTracker.Infrastructure.Persistence.Repositories;
 using SubscriptionTracker.Infrastructure.Security;
+using SubscriptionTracker.Infrastructure.Storage;
 
 namespace SubscriptionTracker.Infrastructure;
 
@@ -43,10 +44,13 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+        services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ITwoFactorService, TotpService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
         AddBackgroundJobs(services);
 

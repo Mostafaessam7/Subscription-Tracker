@@ -14,6 +14,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\SubscriptionTracker.Application\SubscriptionTracker.Application.csproj" />
+    <!-- Only for exercising TotpService's real RFC 6238 implementation against EnableTwoFactor/Login handlers -
+         everything else in this project tests Application in isolation with NSubstitute fakes. -->
+    <ProjectReference Include="..\..\src\Infrastructure\SubscriptionTracker.Infrastructure\SubscriptionTracker.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
