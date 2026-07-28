@@ -1,59 +1,63 @@
-# Client
+# Subscription Tracker — Client
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.6.
+Angular 22 frontend for the Subscription Tracker SaaS (standalone components, signals-based state). See the
+[repo-root README](../README.md) for the overall project, and [HANDOVER.md](../HANDOVER.md) for deep architectural
+detail.
 
 ## Development server
 
-To start a local development server, run:
-
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
+Open `http://localhost:4200`. The app calls the backend API directly — no dev proxy is configured — so the API
+must be running too (see the repo-root README's "Quick start" section). The API base URL is set in
+`src/environments/environment.ts`; if you change the API's port, update it there.
 
 ## Building
-
-To build the project run:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Production build output goes to `dist/client`.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Running tests
 
 ```bash
-ng test
+ng test --watch=false
 ```
 
-## Running end-to-end tests
+Uses Vitest (Angular 22's default test runner), not Karma/Jasmine.
 
-For end-to-end (e2e) testing, run:
+## Project layout
+
+```
+src/app/
+  core/
+    guards/         — route guards (auth required / guest-only)
+    interceptors/    — HTTP interceptors (Bearer token attachment, 401 refresh-and-retry)
+    models/          — TypeScript interfaces mirroring backend API DTOs
+    pipes/           — the `translate` pipe for i18n
+    services/        — one service per backend feature area (auth, subscriptions, budgets, workspace, security, catalog, reports)
+  layout/shell/      — authenticated-app shell (sidenav, topbar, theme/locale toggles)
+  features/          — one folder per page/feature (auth, dashboard, subscriptions, budgets, workspace, security, settings, reports)
+  app.routes.ts      — route table (lazy-loaded, guard-protected)
+```
+
+## i18n
+
+Translation dictionaries live in `public/i18n/en.json` and `public/i18n/ar.json` (served as static assets, not
+compiled in). When adding UI text, add the key to **both** files and use the `translate` pipe
+(`{{ 'some.key' | translate }}`) rather than hardcoding strings — otherwise Arabic/RTL support silently breaks for
+that string.
+
+## Code scaffolding
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli). Angular CLI's schematics
+still work if you want to scaffold a new component/service in the established style:
 
 ```bash
-ng e2e
+ng generate component features/some-feature/some-feature
 ```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

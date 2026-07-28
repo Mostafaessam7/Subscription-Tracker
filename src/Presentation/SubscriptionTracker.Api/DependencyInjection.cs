@@ -108,6 +108,12 @@ public static class DependencyInjection
         services.AddSwaggerGen();
     }
 
+    /// <summary>Named policy applied to the enumeration-sensitive auth endpoints (forgot-password, verify-email,
+    /// reset-password) on top of the global limiter below - these leak account-existence information one guess at
+    /// a time, so they get a much tighter per-IP budget than ordinary API traffic. See
+    /// <see cref="Controllers.V1.AuthController"/> for the <c>[EnableRateLimiting]</c> attributes that use it.</summary>
+    public const string AuthSensitivePolicy = "auth-sensitive";
+
     private static void AddRateLimiting(IServiceCollection services)
     {
         services.AddRateLimiter(options =>
@@ -121,6 +127,16 @@ public static class DependencyInjection
                     {
                         PermitLimit = 100,
                         Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(AuthSensitivePolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(15),
                         QueueLimit = 0,
                     }));
         });
