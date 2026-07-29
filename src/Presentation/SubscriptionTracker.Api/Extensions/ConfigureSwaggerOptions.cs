@@ -1,3 +1,4 @@
+using System.Reflection;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -17,6 +18,13 @@ public sealed class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provi
                 Version = description.ApiVersion.ToString(),
                 Description = "Enterprise subscription management API.",
             });
+        }
+
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
         }
 
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

@@ -1,7 +1,9 @@
 <div class="subscriptions-page">
   <header class="page-header">
     <h1>{{ 'nav.subscriptions' | translate }}</h1>
-    <a routerLink="/subscriptions/new" class="primary-button">{{ 'subscriptions.create' | translate }}</a>
+    @if (permissions.hasPermission(Permissions.Subscriptions.Create)) {
+      <a routerLink="/subscriptions/new" class="primary-button">{{ 'subscriptions.create' | translate }}</a>
+    }
   </header>
 
   <div class="filters">
@@ -45,7 +47,14 @@
       </thead>
       <tbody>
         @for (subscription of page()!.items; track subscription.id) {
-          <tr (click)="openDetail(subscription.id)" class="clickable-row">
+          <tr
+            (click)="openDetail(subscription.id)"
+            (keydown.enter)="openDetail(subscription.id)"
+            (keydown.space)="openDetail(subscription.id); $event.preventDefault()"
+            tabindex="0"
+            role="button"
+            class="clickable-row"
+          >
             <td>{{ subscription.name }}</td>
             <td>{{ subscription.amount }} {{ subscription.currencyCode }}</td>
             <td>{{ subscription.nextRenewalDate ?? '—' }}</td>

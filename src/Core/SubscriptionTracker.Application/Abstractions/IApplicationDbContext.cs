@@ -1,3 +1,4 @@
+using SubscriptionTracker.Domain.Auditing;
 using SubscriptionTracker.Domain.Budgets;
 using SubscriptionTracker.Domain.Catalog;
 using SubscriptionTracker.Domain.Identity;
@@ -17,4 +18,5 @@ public interface IApplicationDbContext
     IQueryable<PaymentMethod> PaymentMethods { get; }
     IQueryable<Subscription> Subscriptions { get; }
     IQueryable<Budget> Budgets { get; }
+    IQueryable<AuditLogEntry> AuditLogs { get; }
 }

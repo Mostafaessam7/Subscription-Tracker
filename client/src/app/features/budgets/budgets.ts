@@ -3,7 +3,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BudgetService } from '../../core/services/budget.service';
 import { CatalogService } from '../../core/services/catalog.service';
+import { PermissionsService } from '../../core/services/permissions.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { Permissions } from '../../core/models/permissions';
 import { Budget, BudgetPeriod } from '../../core/models/budget.models';
 import { Category } from '../../core/models/catalog.models';
 
@@ -18,6 +20,8 @@ export class Budgets implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly budgetService = inject(BudgetService);
   private readonly catalogService = inject(CatalogService);
+  protected readonly permissions = inject(PermissionsService);
+  protected readonly Permissions = Permissions;
 
   protected readonly BudgetPeriod = BudgetPeriod;
   protected readonly periodOptions = [BudgetPeriod.Monthly, BudgetPeriod.Yearly];

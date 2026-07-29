@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SubscriptionTracker.Application.Abstractions;
+using SubscriptionTracker.Domain.Auditing;
 using SubscriptionTracker.Domain.Budgets;
 using SubscriptionTracker.Domain.Catalog;
 using SubscriptionTracker.Domain.Common;
@@ -20,6 +21,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     IQueryable<User> IApplicationDbContext.Users => Users.AsNoTracking();
     IQueryable<Role> IApplicationDbContext.Roles => Roles.AsNoTracking();
@@ -29,6 +31,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     IQueryable<PaymentMethod> IApplicationDbContext.PaymentMethods => PaymentMethods.AsNoTracking();
     IQueryable<Subscription> IApplicationDbContext.Subscriptions => Subscriptions.AsNoTracking();
     IQueryable<Budget> IApplicationDbContext.Budgets => Budgets.AsNoTracking();
+    IQueryable<AuditLogEntry> IApplicationDbContext.AuditLogs => AuditLogs.AsNoTracking();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

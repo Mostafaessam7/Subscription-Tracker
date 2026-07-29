@@ -2,7 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { Permissions } from '../../../core/models/permissions';
 import {
   GetSubscriptionsParams,
   PagedList,
@@ -20,6 +22,8 @@ import {
 export class SubscriptionList {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly router = inject(Router);
+  protected readonly permissions = inject(PermissionsService);
+  protected readonly Permissions = Permissions;
 
   protected readonly SubscriptionStatus = SubscriptionStatus;
   protected readonly statusOptions = [

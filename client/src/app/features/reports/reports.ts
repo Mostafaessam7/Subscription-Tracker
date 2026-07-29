@@ -2,7 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../core/services/report.service';
 import { CatalogService } from '../../core/services/catalog.service';
+import { PermissionsService } from '../../core/services/permissions.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { Permissions } from '../../core/models/permissions';
 import { SubscriptionStatus } from '../../core/models/subscription.models';
 import { Category } from '../../core/models/catalog.models';
 
@@ -16,6 +18,8 @@ import { Category } from '../../core/models/catalog.models';
 export class Reports {
   private readonly reportService = inject(ReportService);
   private readonly catalogService = inject(CatalogService);
+  protected readonly permissions = inject(PermissionsService);
+  protected readonly Permissions = Permissions;
 
   protected readonly statusOptions = [
     SubscriptionStatus.Trial,

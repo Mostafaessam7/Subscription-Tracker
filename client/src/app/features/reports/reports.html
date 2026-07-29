@@ -31,16 +31,18 @@
     </div>
   </section>
 
-  <section class="panel">
-    <h2>{{ 'reports.export' | translate }}</h2>
-    <p class="hint">{{ 'reports.exportHint' | translate }}</p>
-    <div class="export-actions">
-      <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportCsv()">
-        {{ 'reports.exportCsv' | translate }}
-      </button>
-      <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportExcel()">
-        {{ 'reports.exportExcel' | translate }}
-      </button>
-    </div>
-  </section>
+  @if (permissions.hasPermission(Permissions.Reports.Export)) {
+    <section class="panel">
+      <h2>{{ 'reports.export' | translate }}</h2>
+      <p class="hint">{{ 'reports.exportHint' | translate }}</p>
+      <div class="export-actions">
+        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportCsv()">
+          {{ 'reports.exportCsv' | translate }}
+        </button>
+        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportExcel()">
+          {{ 'reports.exportExcel' | translate }}
+        </button>
+      </div>
+    </section>
+  }
 </div>

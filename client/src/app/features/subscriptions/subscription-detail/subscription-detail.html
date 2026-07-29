@@ -74,36 +74,42 @@
               {{ attachment.fileName }}
             </button>
             <span class="attachment-meta">{{ attachment.sizeBytes | number }} B</span>
-            <button type="button" class="link-button danger" (click)="deleteAttachment(attachment.id)">
-              {{ 'settings.delete' | translate }}
-            </button>
+            @if (permissions.hasPermission(Permissions.Subscriptions.Edit)) {
+              <button type="button" class="link-button danger" (click)="deleteAttachment(attachment.id)">
+                {{ 'settings.delete' | translate }}
+              </button>
+            }
           </li>
         } @empty {
           <li class="empty-row">{{ 'subscriptions.noAttachments' | translate }}</li>
         }
       </ul>
-      <label class="upload-button">
-        <input type="file" (change)="onFileSelected($event)" [disabled]="isActionInProgress()" />
-        {{ 'subscriptions.uploadAttachment' | translate }}
-      </label>
+      @if (permissions.hasPermission(Permissions.Subscriptions.Edit)) {
+        <label class="upload-button">
+          <input type="file" (change)="onFileSelected($event)" [disabled]="isActionInProgress()" />
+          {{ 'subscriptions.uploadAttachment' | translate }}
+        </label>
+      }
     </section>
 
     <div class="actions">
-      <button type="button" class="secondary-button" (click)="goToEdit()" [disabled]="isActionInProgress()">
-        {{ 'subscriptions.edit' | translate }}
-      </button>
+      @if (permissions.hasPermission(Permissions.Subscriptions.Edit)) {
+        <button type="button" class="secondary-button" (click)="goToEdit()" [disabled]="isActionInProgress()">
+          {{ 'subscriptions.edit' | translate }}
+        </button>
 
-      @if (subscription()!.status === SubscriptionStatus.Active) {
-        <button type="button" class="secondary-button" (click)="pause()" [disabled]="isActionInProgress()">
-          {{ 'subscriptions.pause' | translate }}
-        </button>
+        @if (subscription()!.status === SubscriptionStatus.Active) {
+          <button type="button" class="secondary-button" (click)="pause()" [disabled]="isActionInProgress()">
+            {{ 'subscriptions.pause' | translate }}
+          </button>
+        }
+        @if (subscription()!.status === SubscriptionStatus.Paused) {
+          <button type="button" class="secondary-button" (click)="resume()" [disabled]="isActionInProgress()">
+            {{ 'subscriptions.resume' | translate }}
+          </button>
+        }
       }
-      @if (subscription()!.status === SubscriptionStatus.Paused) {
-        <button type="button" class="secondary-button" (click)="resume()" [disabled]="isActionInProgress()">
-          {{ 'subscriptions.resume' | translate }}
-        </button>
-      }
-      @if (subscription()!.status !== SubscriptionStatus.Cancelled && subscription()!.status !== SubscriptionStatus.Expired) {
+      @if (permissions.hasPermission(Permissions.Subscriptions.Cancel) && subscription()!.status !== SubscriptionStatus.Cancelled && subscription()!.status !== SubscriptionStatus.Expired) {
         <button type="button" class="danger-button" (click)="cancel()" [disabled]="isActionInProgress()">
           {{ 'subscriptions.cancel' | translate }}
         </button>

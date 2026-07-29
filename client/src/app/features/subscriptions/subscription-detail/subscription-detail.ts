@@ -3,7 +3,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { CatalogService } from '../../../core/services/catalog.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { Permissions } from '../../../core/models/permissions';
 import { Subscription, SubscriptionStatus } from '../../../core/models/subscription.models';
 import { Category, PaymentMethod, Tag } from '../../../core/models/catalog.models';
 
@@ -19,6 +21,8 @@ export class SubscriptionDetail implements OnInit {
   private readonly router = inject(Router);
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly catalogService = inject(CatalogService);
+  protected readonly permissions = inject(PermissionsService);
+  protected readonly Permissions = Permissions;
 
   protected readonly SubscriptionStatus = SubscriptionStatus;
 

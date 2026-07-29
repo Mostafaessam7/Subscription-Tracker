@@ -7,7 +7,10 @@
   "nav.security": "Security",
   "nav.reports": "Reports",
   "nav.settings": "Settings",
+  "nav.auditLog": "Audit Log",
   "nav.logout": "Log out",
+  "nav.toggleMenu": "Toggle navigation menu",
+  "nav.switchLanguage": "Switch language",
   "theme.toggle": "Toggle theme",
   "auth.login.title": "Sign in",
   "auth.login.email": "Email",
@@ -176,5 +179,15 @@
   "validation.required": "This field is required.",
   "validation.email": "Enter a valid email address.",
   "validation.minLength": "Must be at least {0} characters.",
-  "error.generic": "Something went wrong. Please try again."
+  "error.generic": "Something went wrong. Please try again.",
+  "auditLog.title": "Audit Log",
+  "auditLog.time": "Time",
+  "auditLog.user": "User",
+  "auditLog.action": "Action",
+  "auditLog.entity": "Entity ID",
+  "auditLog.status": "Status",
+  "auditLog.success": "Success",
+  "auditLog.failed": "Failed",
+  "auditLog.empty": "No activity recorded yet.",
+  "auditLog.system": "System"
 }
