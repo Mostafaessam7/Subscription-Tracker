@@ -27,16 +27,19 @@
             }
           </div>
           <p class="threshold-note">{{ 'budgets.threshold' | translate }}: {{ budget.alertThresholdPercentage }}%</p>
-          <div class="budget-actions">
-            <button type="button" class="link-button" (click)="edit(budget)">{{ 'settings.edit' | translate }}</button>
-            <button type="button" class="link-button danger" (click)="delete(budget)">{{ 'settings.delete' | translate }}</button>
-          </div>
+          @if (permissions.hasPermission(Permissions.Budgets.Manage)) {
+            <div class="budget-actions">
+              <button type="button" class="link-button" (click)="edit(budget)">{{ 'settings.edit' | translate }}</button>
+              <button type="button" class="link-button danger" (click)="delete(budget)">{{ 'settings.delete' | translate }}</button>
+            </div>
+          }
         </div>
       } @empty {
         <p>{{ 'budgets.empty' | translate }}</p>
       }
     </div>
 
+    @if (permissions.hasPermission(Permissions.Budgets.Manage)) {
     <form class="form-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <h2>{{ (isEditing ? 'budgets.editTitle' : 'budgets.createTitle') | translate }}</h2>
 
@@ -88,5 +91,6 @@
         }
       </div>
     </form>
+    }
   }
 </div>

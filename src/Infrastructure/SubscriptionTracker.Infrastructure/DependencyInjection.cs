@@ -40,6 +40,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IAuditLogWriter, AuditLogWriter>();
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));

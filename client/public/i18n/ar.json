@@ -7,7 +7,10 @@
   "nav.security": "الأمان",
   "nav.reports": "التقارير",
   "nav.settings": "الإعدادات",
+  "nav.auditLog": "سجل النشاط",
   "nav.logout": "تسجيل الخروج",
+  "nav.toggleMenu": "تبديل قائمة التنقل",
+  "nav.switchLanguage": "تغيير اللغة",
   "theme.toggle": "تبديل المظهر",
   "auth.login.title": "تسجيل الدخول",
   "auth.login.email": "البريد الإلكتروني",
@@ -176,5 +179,15 @@
   "validation.required": "هذا الحقل مطلوب.",
   "validation.email": "أدخل بريدًا إلكترونيًا صحيحًا.",
   "validation.minLength": "يجب ألا يقل عن {0} أحرف.",
-  "error.generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  "error.generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  "auditLog.title": "سجل النشاط",
+  "auditLog.time": "الوقت",
+  "auditLog.user": "المستخدم",
+  "auditLog.action": "الإجراء",
+  "auditLog.entity": "معرّف الكيان",
+  "auditLog.status": "الحالة",
+  "auditLog.success": "ناجح",
+  "auditLog.failed": "فشل",
+  "auditLog.empty": "لا يوجد نشاط مسجل بعد.",
+  "auditLog.system": "النظام"
 }

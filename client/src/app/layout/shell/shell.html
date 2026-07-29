@@ -1,7 +1,7 @@
 <div class="shell">
-  <aside class="sidenav">
+  <aside class="sidenav" [class.open]="isNavOpen()">
     <div class="brand">{{ 'app.name' | translate }}</div>
-    <nav>
+    <nav (click)="closeNav()">
       <a routerLink="/dashboard" routerLinkActive="active">{{ 'nav.dashboard' | translate }}</a>
       <a routerLink="/subscriptions" routerLinkActive="active">{{ 'nav.subscriptions' | translate }}</a>
       <a routerLink="/budgets" routerLinkActive="active">{{ 'nav.budgets' | translate }}</a>
@@ -9,19 +9,43 @@
       <a routerLink="/workspace" routerLinkActive="active">{{ 'nav.workspace' | translate }}</a>
       <a routerLink="/security" routerLinkActive="active">{{ 'nav.security' | translate }}</a>
       <a routerLink="/settings" routerLinkActive="active">{{ 'nav.settings' | translate }}</a>
+      @if (permissions.hasPermission(Permissions.Workspace.ManageSettings)) {
+        <a routerLink="/audit-log" routerLinkActive="active">{{ 'nav.auditLog' | translate }}</a>
+      }
     </nav>
   </aside>
 
+  @if (isNavOpen()) {
+    <div class="nav-scrim" (click)="closeNav()"></div>
+  }
+
   <div class="main">
     <header class="topbar">
+      <button
+        type="button"
+        class="icon-button nav-toggle"
+        (click)="toggleNav()"
+        [attr.aria-label]="'nav.toggleMenu' | translate"
+        [attr.aria-expanded]="isNavOpen()"
+      >
+        ☰
+      </button>
       <div class="topbar-spacer"></div>
-      <button type="button" class="icon-button" (click)="switchLocale()" [title]="translationService.locale()">
+      <button
+        type="button"
+        class="icon-button"
+        (click)="switchLocale()"
+        [attr.aria-label]="'nav.switchLanguage' | translate"
+        [title]="translationService.locale()"
+      >
         {{ translationService.locale() === 'en' ? 'AR' : 'EN' }}
       </button>
       <button type="button" class="icon-button" (click)="themeService.toggle()" [attr.aria-label]="'theme.toggle' | translate">
         {{ themeService.theme() === 'dark' ? '☀' : '☾' }}
       </button>
-      <button type="button" class="icon-button" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+      <button type="button" class="icon-button" (click)="logout()" [attr.aria-label]="'nav.logout' | translate">
+        {{ 'nav.logout' | translate }}
+      </button>
     </header>
 
     <main class="content">

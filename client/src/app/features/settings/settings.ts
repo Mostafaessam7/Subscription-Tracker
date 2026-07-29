@@ -1,7 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CatalogService } from '../../core/services/catalog.service';
+import { PermissionsService } from '../../core/services/permissions.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { Permissions } from '../../core/models/permissions';
 import { Category, PaymentMethod, PaymentMethodType, Tag } from '../../core/models/catalog.models';
 
 @Component({
@@ -14,6 +16,8 @@ import { Category, PaymentMethod, PaymentMethodType, Tag } from '../../core/mode
 export class Settings implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly catalogService = inject(CatalogService);
+  protected readonly permissions = inject(PermissionsService);
+  protected readonly Permissions = Permissions;
 
   protected readonly PaymentMethodType = PaymentMethodType;
   protected readonly paymentMethodTypeOptions = [

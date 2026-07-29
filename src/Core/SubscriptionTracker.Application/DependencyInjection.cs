@@ -17,6 +17,7 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             cfg.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
+            cfg.AddOpenBehavior(typeof(AuditLoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
         });
 
