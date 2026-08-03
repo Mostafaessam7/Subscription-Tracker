@@ -56,6 +56,18 @@ public sealed class Role : AuditableAggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result UpdateDetails(string name, string? description)
+    {
+        var renameResult = Rename(name);
+        if (renameResult.IsFailure)
+        {
+            return renameResult;
+        }
+
+        Description = description?.Trim();
+        return Result.Success();
+    }
+
     public Result GrantPermission(string permissionCode)
     {
         if (!Permissions.All.Contains(permissionCode))

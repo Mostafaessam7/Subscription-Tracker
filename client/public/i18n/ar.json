@@ -8,6 +8,7 @@
   "nav.reports": "التقارير",
   "nav.settings": "الإعدادات",
   "nav.auditLog": "سجل النشاط",
+  "nav.roles": "الأدوار",
   "nav.logout": "تسجيل الخروج",
   "nav.toggleMenu": "تبديل قائمة التنقل",
   "nav.switchLanguage": "تغيير اللغة",
@@ -190,5 +191,14 @@
   "auditLog.success": "ناجح",
   "auditLog.failed": "فشل",
   "auditLog.empty": "لا يوجد نشاط مسجل بعد.",
-  "auditLog.system": "النظام"
+  "auditLog.system": "النظام",
+  "roles.title": "الأدوار",
+  "roles.createTitle": "إنشاء دور",
+  "roles.editTitle": "تعديل الدور",
+  "roles.name": "اسم الدور",
+  "roles.description": "الوصف",
+  "roles.permissions": "الصلاحيات",
+  "roles.empty": "لا توجد أدوار بعد.",
+  "roles.systemBadge": "نظام",
+  "roles.permissionsGranted": "صلاحية ممنوحة"
 }

@@ -1,0 +1,76 @@
+<div class="roles-page">
+  <h1>{{ 'roles.title' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else {
+    <ul class="role-list">
+      @for (role of roles(); track role.id) {
+        <li class="role-row">
+          <div class="role-info">
+            <span class="item-name">{{ role.name }}</span>
+            @if (role.isSystemRole) {
+              <span class="system-badge">{{ 'roles.systemBadge' | translate }}</span>
+            }
+            @if (role.description) {
+              <span class="role-description">{{ role.description }}</span>
+            }
+            <span class="permission-count">{{ role.permissions.length }} {{ 'roles.permissionsGranted' | translate }}</span>
+          </div>
+          @if (!role.isSystemRole) {
+            <div class="role-actions">
+              <button type="button" class="link-button" (click)="edit(role)">{{ 'settings.edit' | translate }}</button>
+              <button type="button" class="link-button danger" (click)="delete(role)">{{ 'settings.delete' | translate }}</button>
+            </div>
+          }
+        </li>
+      } @empty {
+        <li class="empty-row">{{ 'roles.empty' | translate }}</li>
+      }
+    </ul>
+
+    <form class="form-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h2>{{ (isEditing ? 'roles.editTitle' : 'roles.createTitle') | translate }}</h2>
+
+      <label class="field">
+        <span>{{ 'roles.name' | translate }}</span>
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label class="field">
+        <span>{{ 'roles.description' | translate }}</span>
+        <input type="text" formControlName="description" />
+      </label>
+
+      <fieldset class="permission-matrix">
+        <legend>{{ 'roles.permissions' | translate }}</legend>
+        @for (group of permissionGroups(); track group.category) {
+          <div class="permission-group">
+            <h3>{{ group.category }}</h3>
+            @for (code of group.codes; track code) {
+              <label class="checkbox-inline">
+                <input
+                  type="checkbox"
+                  [checked]="isPermissionSelected(code)"
+                  (change)="togglePermission(code)"
+                />
+                <span>{{ code }}</span>
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" class="primary-button">{{ (isEditing ? 'settings.save' : 'settings.add') | translate }}</button>
+        @if (isEditing) {
+          <button type="button" class="secondary-button" (click)="cancelEdit()">{{ 'settings.cancel' | translate }}</button>
+        }
+      </div>
+    </form>
+  }
+</div>

@@ -8,6 +8,7 @@
   "nav.reports": "Reports",
   "nav.settings": "Settings",
   "nav.auditLog": "Audit Log",
+  "nav.roles": "Roles",
   "nav.logout": "Log out",
   "nav.toggleMenu": "Toggle navigation menu",
   "nav.switchLanguage": "Switch language",
@@ -190,5 +191,14 @@
   "auditLog.success": "Success",
   "auditLog.failed": "Failed",
   "auditLog.empty": "No activity recorded yet.",
-  "auditLog.system": "System"
+  "auditLog.system": "System",
+  "roles.title": "Roles",
+  "roles.createTitle": "Create a role",
+  "roles.editTitle": "Edit role",
+  "roles.name": "Role name",
+  "roles.description": "Description",
+  "roles.permissions": "Permissions",
+  "roles.empty": "No roles yet.",
+  "roles.systemBadge": "System",
+  "roles.permissionsGranted": "permissions granted"
 }
