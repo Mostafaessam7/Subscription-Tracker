@@ -3,13 +3,13 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { AuthBrandPanel } from '../../../shared/auth-brand-panel/auth-brand-panel';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, AuthBrandPanel],
   templateUrl: './register.html',
-  styleUrl: '../login/login.scss',
 })
 export class Register {
   private readonly formBuilder = inject(FormBuilder);

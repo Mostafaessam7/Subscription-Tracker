@@ -5,13 +5,13 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { ProblemDetails } from '../../../core/models/auth.models';
+import { AuthBrandPanel } from '../../../shared/auth-brand-panel/auth-brand-panel';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, AuthBrandPanel],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
 })
 export class Login {
   private readonly formBuilder = inject(FormBuilder);

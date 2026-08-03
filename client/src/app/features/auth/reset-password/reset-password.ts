@@ -4,6 +4,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { AuthBrandPanel } from '../../../shared/auth-brand-panel/auth-brand-panel';
 
 function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -14,9 +15,8 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, AuthBrandPanel],
   templateUrl: './reset-password.html',
-  styleUrl: '../login/login.scss',
 })
 export class ResetPassword implements OnInit {
   private readonly formBuilder = inject(FormBuilder);

@@ -1,23 +1,69 @@
 <div class="shell">
   <aside class="sidenav" [class.open]="isNavOpen()">
-    <div class="brand">{{ 'app.name' | translate }}</div>
+    <div class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 32 32" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="9" fill="currentColor" fill-opacity="0.16" />
+          <path d="M9 20.5V13a7 7 0 0 1 14 0v7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+          <circle cx="9" cy="22" r="2.2" fill="currentColor" />
+          <circle cx="23" cy="22" r="2.2" fill="currentColor" />
+        </svg>
+      </span>
+      <span class="brand-name">{{ 'app.name' | translate }}</span>
+    </div>
     <nav (click)="closeNav()">
-      <a routerLink="/dashboard" routerLinkActive="active">{{ 'nav.dashboard' | translate }}</a>
-      <a routerLink="/subscriptions" routerLinkActive="active">{{ 'nav.subscriptions' | translate }}</a>
-      <a routerLink="/budgets" routerLinkActive="active">{{ 'nav.budgets' | translate }}</a>
-      <a routerLink="/calendar" routerLinkActive="active">{{ 'nav.calendar' | translate }}</a>
-      <a routerLink="/reports" routerLinkActive="active">{{ 'nav.reports' | translate }}</a>
-      <a routerLink="/workspace" routerLinkActive="active">{{ 'nav.workspace' | translate }}</a>
-      <a routerLink="/security" routerLinkActive="active">{{ 'nav.security' | translate }}</a>
-      <a routerLink="/settings" routerLinkActive="active">{{ 'nav.settings' | translate }}</a>
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 10.5 10 4l7 6.5M5 9v7h10V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>{{ 'nav.dashboard' | translate }}</span>
+      </a>
+      <a routerLink="/subscriptions" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>{{ 'nav.subscriptions' | translate }}</span>
+      </a>
+      <a routerLink="/budgets" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2v16M4 6h9a3 3 0 0 1 0 6H6a3 3 0 0 0 0 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>{{ 'nav.budgets' | translate }}</span>
+      </a>
+      <a routerLink="/calendar" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>{{ 'nav.calendar' | translate }}</span>
+      </a>
+      <a routerLink="/reports" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 16V9M10 16V4M16 16v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>{{ 'nav.reports' | translate }}</span>
+      </a>
+
+      <div class="nav-divider"></div>
+
+      <a routerLink="/workspace" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="8.5" r="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 16c0-2.5 1.8-4 4-4s4 1.5 4 4M12 16c0-2 1.4-3.2 3.2-3.2S18 14 18 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>{{ 'nav.workspace' | translate }}</span>
+      </a>
+      <a routerLink="/security" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2 4 4.5V9c0 4 2.5 6.7 6 8 3.5-1.3 6-4 6-8V4.5L10 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>{{ 'nav.security' | translate }}</span>
+      </a>
+      <a routerLink="/settings" routerLinkActive="active">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.4 4.6l-1.4 1.4M6 12.6l-1.4 1.4M15.4 15.4 14 14M6 7.4 4.6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>{{ 'nav.settings' | translate }}</span>
+      </a>
       @if (permissions.hasPermission(Permissions.Workspace.ManageSettings)) {
-        <a routerLink="/audit-log" routerLinkActive="active">{{ 'nav.auditLog' | translate }}</a>
+        <a routerLink="/audit-log" routerLinkActive="active">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M5 3h10v14l-2.5-1.5L10 17l-2.5-1.5L5 17V3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <span>{{ 'nav.auditLog' | translate }}</span>
+        </a>
       }
       @if (permissions.hasPermission(Permissions.Workspace.ManageRoles)) {
-        <a routerLink="/roles" routerLinkActive="active">{{ 'nav.roles' | translate }}</a>
+        <a routerLink="/roles" routerLinkActive="active">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2 4 4.5V9c0 4 2.5 6.7 6 8 3.5-1.3 6-4 6-8V4.5L10 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 10 9 11.5 12.5 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>{{ 'nav.roles' | translate }}</span>
+        </a>
       }
       @if (permissions.isSystemAdmin()) {
-        <a routerLink="/admin" routerLinkActive="active">{{ 'nav.admin' | translate }}</a>
+        <a routerLink="/admin" routerLinkActive="active">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="4" height="8" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="8" y="5" width="4" height="12" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="12" width="4" height="5" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>{{ 'nav.admin' | translate }}</span>
+        </a>
       }
     </nav>
   </aside>

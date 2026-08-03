@@ -1,4 +1,6 @@
-<div class="auth-page">
+<div class="auth-shell">
+  <app-auth-brand-panel />
+  <div class="auth-form-panel">
   @if (registered()) {
     <div class="auth-card">
       <h1>{{ 'auth.login.title' | translate }}</h1>
@@ -55,4 +57,5 @@
       </p>
     </form>
   }
+  </div>
 </div>

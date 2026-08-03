@@ -1,4 +1,6 @@
-<div class="auth-page">
+<div class="auth-shell">
+  <app-auth-brand-panel />
+  <div class="auth-form-panel">
   <div class="auth-card">
     <h1>{{ 'auth.verifyEmail.title' | translate }}</h1>
 
@@ -15,5 +17,6 @@
         <a routerLink="/auth/login" class="primary-button">{{ 'auth.register.loginLink' | translate }}</a>
       }
     }
+  </div>
   </div>
 </div>
