@@ -22,3 +22,5 @@ public sealed record WorkspaceMemberDto(
 public sealed record PendingInvitationDto(Guid WorkspaceId, string WorkspaceName, Guid MemberId, string RoleName);
 
 public sealed record AssignableRoleDto(Guid Id, string Name, string? Description);
+
+public sealed record MyWorkspaceSummaryDto(Guid Id, string Name, string RoleName, bool IsOwner, bool IsCurrent);

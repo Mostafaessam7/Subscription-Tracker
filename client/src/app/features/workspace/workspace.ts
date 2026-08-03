@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { WorkspaceService } from '../../core/services/workspace.service';
+import { WorkspaceContextService } from '../../core/services/workspace-context.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
 import {
   AssignableRole,
@@ -19,6 +20,7 @@ import {
 export class Workspace implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly workspaceService = inject(WorkspaceService);
+  private readonly workspaceContext = inject(WorkspaceContextService);
 
   readonly workspace = signal<WorkspaceModel | null>(null);
   readonly assignableRoles = signal<AssignableRole[]>([]);
@@ -112,6 +114,7 @@ export class Workspace implements OnInit {
     this.workspaceService.acceptInvitation(invitation.memberId).subscribe({
       next: () => {
         this.pendingInvitations.update((list) => list.filter((i) => i.memberId !== invitation.memberId));
+        this.workspaceContext.refresh();
       },
       error: () => this.errorMessage.set('error.generic'),
     });
