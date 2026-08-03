@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using SubscriptionTracker.Application.Abstractions;
 
 namespace SubscriptionTracker.Infrastructure.Persistence;
 
@@ -13,6 +14,17 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
             "Server=(localdb)\\mssqllocaldb;Database=SubscriptionTracker;Trusted_Connection=True;MultipleActiveResultSets=true",
             sql => sql.MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly.FullName));
 
-        return new ApplicationDbContext(optionsBuilder.Options);
+        // Design-time only (migration generation) - no per-request tenant context exists here, and none is
+        // needed since no queries actually run, only model-building.
+        return new ApplicationDbContext(optionsBuilder.Options, new DesignTimeCurrentUserService());
+    }
+
+    private sealed class DesignTimeCurrentUserService : ICurrentUserService
+    {
+        public Guid? UserId => null;
+        public Guid? WorkspaceId => null;
+        public string? Email => null;
+        public bool IsAuthenticated => false;
+        public bool HasPermission(string permissionCode) => false;
     }
 }

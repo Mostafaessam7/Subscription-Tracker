@@ -808,7 +808,7 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("BudgetId");
 
-                            b1.ToTable("Budgets");
+                            b1.ToTable("Budgets", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("BudgetId");
@@ -861,7 +861,7 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("RenewalHistoryEntryId");
 
-                            b1.ToTable("SubscriptionRenewalHistory");
+                            b1.ToTable("SubscriptionRenewalHistory", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("RenewalHistoryEntryId");
@@ -890,7 +890,7 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("SubscriptionId");
 
-                            b1.ToTable("Subscriptions");
+                            b1.ToTable("Subscriptions", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("SubscriptionId");
@@ -913,7 +913,7 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("SubscriptionId");
 
-                            b1.ToTable("Subscriptions");
+                            b1.ToTable("Subscriptions", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("SubscriptionId");
@@ -962,7 +962,7 @@ namespace SubscriptionTracker.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("WorkspaceId");
 
-                            b1.ToTable("Workspaces");
+                            b1.ToTable("Workspaces", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("WorkspaceId");

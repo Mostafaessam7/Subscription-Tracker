@@ -31,7 +31,11 @@ public class BackgroundJobExecutionTests : IDisposable
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        _dbContext = new ApplicationDbContext(options);
+
+        // Jobs sweep across every workspace with no per-request tenant context, same as production Quartz
+        // execution - an unconfigured ICurrentUserService reports a null WorkspaceId, which is exactly the
+        // escape hatch ApplicationDbContext's tenant-isolation query filters use to mean "don't filter".
+        _dbContext = new ApplicationDbContext(options, Substitute.For<ICurrentUserService>());
     }
 
     private Subscription CreateSubscription(
