@@ -35,7 +35,7 @@ public static class DependencyInjection
         AddRateLimiting(services);
         AddResponseCompression(services);
         AddHealthChecks(services, configuration);
-        AddObservability(services);
+        AddObservability(services, configuration);
 
         return services;
     }
@@ -188,16 +188,41 @@ public static class DependencyInjection
                 tags: ["ready"]);
     }
 
-    private static void AddObservability(IServiceCollection services)
+    /// <summary>
+    /// Traces/metrics are always collected in-process; whether they ship anywhere depends entirely on
+    /// `OpenTelemetry:OtlpEndpoint` being set (e.g. `http://localhost:4317` for a local OTel Collector). Unset by
+    /// default - there's no collector to send to out of the box, and the OTLP exporter would otherwise just log
+    /// connection-refused warnings on every export interval.
+    /// </summary>
+    private static void AddObservability(IServiceCollection services, IConfiguration configuration)
     {
+        var otlpEndpoint = configuration["OpenTelemetry:OtlpEndpoint"];
+
         services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService("SubscriptionTracker.Api"))
-            .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation())
-            .WithMetrics(metrics => metrics
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation());
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation();
+
+                if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+                {
+                    tracing.AddOtlpExporter(otlp => otlp.Endpoint = new Uri(otlpEndpoint));
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation();
+
+                if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+                {
+                    metrics.AddOtlpExporter(otlp => otlp.Endpoint = new Uri(otlpEndpoint));
+                }
+            });
     }
 }

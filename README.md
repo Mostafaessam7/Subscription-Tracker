@@ -114,6 +114,16 @@ deployment, supply secrets (`Jwt__SigningKey`, `ConnectionStrings__SubscriptionT
 variables or a secret manager — never commit real secrets to `appsettings.Production.json`. The API refuses to
 start in the `Production` environment if `Jwt:SigningKey` is missing or still set to the development placeholder.
 
+### Observability
+
+Serilog handles structured logging out of the box (console + rolling file). OpenTelemetry traces and metrics
+(ASP.NET Core, HttpClient, EF Core, .NET runtime counters) are always collected in-process, but nothing ships
+anywhere until you set `OpenTelemetry__OtlpEndpoint` (or `OpenTelemetry:OtlpEndpoint` in `appsettings.*.json`) to
+an OTLP collector endpoint, e.g. `http://localhost:4317` for a local [OpenTelemetry
+Collector](https://opentelemetry.io/docs/collector/) or your APM vendor's OTLP ingest URL. Leave it unset for
+local development - there's no collector running by default, and enabling the exporter without one just produces
+export-failure warnings in the logs.
+
 ### Bootstrapping the first system administrator
 
 Cross-tenant administration (`/api/v1/admin/*` — list every workspace/user, disable/enable accounts, system
