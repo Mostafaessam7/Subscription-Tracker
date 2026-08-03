@@ -57,6 +57,10 @@ export class Reports {
     this.download(this.reportService.exportSubscriptionsExcel(this.filters), 'subscriptions.xlsx');
   }
 
+  exportPdf(): void {
+    this.download(this.reportService.exportSubscriptionsPdf(this.filters), 'subscriptions.pdf');
+  }
+
   private download(source: ReturnType<ReportService['exportSubscriptionsCsv']>, fallbackFileName: string): void {
     this.isExporting.set(true);
     this.errorMessage.set(null);

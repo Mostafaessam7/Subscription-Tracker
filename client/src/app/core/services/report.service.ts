@@ -24,6 +24,10 @@ export class ReportService {
     return this.http.get(`${this.baseUrl}/subscriptions/excel`, { params: this.toParams(filters), responseType: 'blob' });
   }
 
+  exportSubscriptionsPdf(filters: ReportFilters): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/subscriptions/pdf`, { params: this.toParams(filters), responseType: 'blob' });
+  }
+
   private toParams(filters: ReportFilters): HttpParams {
     let params = new HttpParams();
     if (filters.searchTerm) params = params.set('searchTerm', filters.searchTerm);

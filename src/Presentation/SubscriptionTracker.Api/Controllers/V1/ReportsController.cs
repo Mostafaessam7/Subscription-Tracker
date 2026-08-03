@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using SubscriptionTracker.Api.Authorization;
 using SubscriptionTracker.Application.Reports.ExportSubscriptionsCsv;
 using SubscriptionTracker.Application.Reports.ExportSubscriptionsExcel;
+using SubscriptionTracker.Application.Reports.ExportSubscriptionsPdf;
 using SubscriptionTracker.Domain.Identity;
 using SubscriptionTracker.Domain.Subscriptions.Enums;
 
@@ -44,6 +45,23 @@ public sealed class ReportsController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(
             new ExportSubscriptionsExcelQuery(searchTerm, categoryId, tagId, status), cancellationToken);
+
+        return result.IsSuccess
+            ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName)
+            : NotFound();
+    }
+
+    [HttpGet("subscriptions/pdf")]
+    [HasPermission(Permissions.Reports.Export)]
+    public async Task<IActionResult> ExportSubscriptionsPdf(
+        [FromQuery] string? searchTerm,
+        [FromQuery] Guid? categoryId,
+        [FromQuery] Guid? tagId,
+        [FromQuery] SubscriptionStatus? status,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new ExportSubscriptionsPdfQuery(searchTerm, categoryId, tagId, status), cancellationToken);
 
         return result.IsSuccess
             ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName)
