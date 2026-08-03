@@ -1,0 +1,69 @@
+<div class="calendar-page">
+  <header class="page-header">
+    <h1>{{ 'calendar.title' | translate }}</h1>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else {
+    <div class="calendar-toolbar">
+      <button type="button" class="secondary-button" (click)="previousMonth()" [attr.aria-label]="'calendar.previousMonth' | translate">‹</button>
+      <span class="month-label">{{ monthLabel() }}</span>
+      <button type="button" class="secondary-button" (click)="nextMonth()" [attr.aria-label]="'calendar.nextMonth' | translate">›</button>
+      <button type="button" class="link-button" (click)="goToToday()">{{ 'calendar.today' | translate }}</button>
+    </div>
+
+    <table class="calendar-grid">
+      <thead>
+        <tr>
+          <th>{{ 'calendar.day.0' | translate }}</th>
+          <th>{{ 'calendar.day.1' | translate }}</th>
+          <th>{{ 'calendar.day.2' | translate }}</th>
+          <th>{{ 'calendar.day.3' | translate }}</th>
+          <th>{{ 'calendar.day.4' | translate }}</th>
+          <th>{{ 'calendar.day.5' | translate }}</th>
+          <th>{{ 'calendar.day.6' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (week of weeks(); track week[0].dateKey) {
+          <tr>
+            @for (day of week; track day.dateKey) {
+              <td
+                class="calendar-day"
+                [class.outside-month]="!day.inCurrentMonth"
+                [class.today]="day.isToday"
+                [class.has-renewals]="day.renewals.length > 0"
+                [class.selected]="selectedDayKey() === day.dateKey"
+                (click)="selectDay(day)"
+              >
+                <span class="day-number">{{ day.date.getDate() }}</span>
+                @if (day.renewals.length > 0) {
+                  <span class="renewal-badge">{{ day.renewals.length }}</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (selectedDayKey() && selectedDayRenewals().length > 0) {
+      <section class="selected-day-panel">
+        <h2>{{ selectedDayKey() }}</h2>
+        <ul>
+          @for (subscription of selectedDayRenewals(); track subscription.id) {
+            <li>
+              <a [routerLink]="['/subscriptions', subscription.id]">{{ subscription.name }}</a>
+              <span class="renewal-amount">{{ subscription.amount }} {{ subscription.currencyCode }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>

@@ -34,6 +34,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
       { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
       { path: 'budgets', loadComponent: () => import('./features/budgets/budgets').then((m) => m.Budgets) },
+      { path: 'calendar', loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar) },
       { path: 'workspace', loadComponent: () => import('./features/workspace/workspace').then((m) => m.Workspace) },
       { path: 'audit-log', loadComponent: () => import('./features/audit-log/audit-log').then((m) => m.AuditLog) },
       { path: 'roles', loadComponent: () => import('./features/roles/roles').then((m) => m.Roles) },
