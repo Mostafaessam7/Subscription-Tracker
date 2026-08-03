@@ -12,6 +12,9 @@
       @if (permissions.hasPermission(Permissions.Workspace.ManageSettings)) {
         <a routerLink="/audit-log" routerLinkActive="active">{{ 'nav.auditLog' | translate }}</a>
       }
+      @if (permissions.hasPermission(Permissions.Workspace.ManageRoles)) {
+        <a routerLink="/roles" routerLinkActive="active">{{ 'nav.roles' | translate }}</a>
+      }
     </nav>
   </aside>
 
