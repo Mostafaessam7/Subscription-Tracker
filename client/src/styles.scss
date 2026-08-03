@@ -328,26 +328,25 @@ textarea:not(.field textarea) {
   font-weight: 500;
 }
 
-/* Shared auth layout — brand panel (left) + form panel (right) */
+/* Shared auth layout — a single full-bleed Vanta backdrop (rendered by AuthBrandPanel, fixed
+   behind everything) with one centered glass card on top. Deliberately not a split two-panel
+   layout: one continuous background reads as a single cohesive scene instead of two adjacent
+   rectangles competing for attention. */
 .auth-shell {
+  position: relative;
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-form-panel {
-  /* The form panel always renders with these fixed light values, independent of the app's
-     dark/light theme setting — the brand panel already carries a fixed dark identity (the
-     Vanta backdrop), so letting this side also flip to near-black in dark mode made the two
-     panels visually merge into one undifferentiated block. Auth pages render before a user has
-     any reason to care about their in-app theme preference, so a single, always-legible look
-     here is simpler than wiring up a theme toggle nobody's logged in yet to see. */
-  --color-bg: #f4f5f9;
-  --color-surface: #ffffff;
+  /* The card always renders with these fixed light-on-glass values, independent of the app's
+     dark/light theme setting - the backdrop is a fixed dark scene (the Vanta topology), so this
+     needs to read consistently on top of it regardless of what the signed-out visitor's OS
+     theme happens to be. */
+  --color-bg: transparent;
+  --color-surface: rgb(255 255 255 / 96%);
   --color-surface-hover: #f7f8fc;
   --color-border: #e3e5ee;
   --color-text: #14161f;
@@ -355,11 +354,13 @@ textarea:not(.field textarea) {
   --color-primary-soft: #eef0fd;
   --color-danger-soft: #fef2f2;
 
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   padding: 1.5rem;
-  background-color: var(--color-bg);
   color: var(--color-text);
 }
 
@@ -367,9 +368,10 @@ textarea:not(.field textarea) {
   width: 100%;
   max-width: 400px;
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 30px 60px rgb(10 11 26 / 45%), 0 4px 16px rgb(10 11 26 / 25%);
   padding: 2.25rem;
   animation: auth-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 

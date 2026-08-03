@@ -1,38 +1,17 @@
-<div class="brand-panel">
-  <div #vantaHost class="vanta-host"></div>
-  <div class="brand-panel-scrim"></div>
+<div #vantaHost class="vanta-host"></div>
+<div class="vanta-scrim"></div>
 
-  <div class="brand-panel-content">
-    <div class="brand-mark">
-      <svg viewBox="0 0 32 32" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="9" fill="currentColor" fill-opacity="0.18" />
-        <path
-          d="M9 20.5V13a7 7 0 0 1 14 0v7.5"
-          stroke="currentColor"
-          stroke-width="2.2"
-          stroke-linecap="round"
-        />
-        <circle cx="9" cy="22" r="2.2" fill="currentColor" />
-        <circle cx="23" cy="22" r="2.2" fill="currentColor" />
-      </svg>
-      <span>{{ 'app.name' | translate }}</span>
-    </div>
-
-    <h2 class="brand-headline">{{ 'app.tagline' | translate }}</h2>
-
-    <ul class="brand-highlights">
-      <li>
-        <span class="brand-highlight-icon">✓</span>
-        {{ 'app.highlight.renewals' | translate }}
-      </li>
-      <li>
-        <span class="brand-highlight-icon">✓</span>
-        {{ 'app.highlight.budgets' | translate }}
-      </li>
-      <li>
-        <span class="brand-highlight-icon">✓</span>
-        {{ 'app.highlight.teams' | translate }}
-      </li>
-    </ul>
-  </div>
+<div class="brand-corner">
+  <svg viewBox="0 0 32 32" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="32" height="32" rx="9" fill="currentColor" fill-opacity="0.2" />
+    <path
+      d="M9 20.5V13a7 7 0 0 1 14 0v7.5"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+    />
+    <circle cx="9" cy="22" r="2.2" fill="currentColor" />
+    <circle cx="23" cy="22" r="2.2" fill="currentColor" />
+  </svg>
+  <span>{{ 'app.name' | translate }}</span>
 </div>

@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
-import * as THREE from 'three';
-import WAVES, { VantaEffect } from 'vanta/dist/vanta.waves.min';
+import p5 from 'p5';
+import TOPOLOGY, { VantaEffect } from 'vanta/dist/vanta.topology.min';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
@@ -21,9 +21,9 @@ export class AuthBrandPanel implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.effect = WAVES({
+    this.effect = TOPOLOGY({
       el: this.vantaHost.nativeElement,
-      THREE,
+      p5,
       mouseControls: true,
       touchControls: true,
       gyroControls: false,
@@ -31,11 +31,8 @@ export class AuthBrandPanel implements AfterViewInit, OnDestroy {
       minWidth: 200,
       scale: 1,
       scaleMobile: 1,
-      color: 0x4338ca,
-      shininess: 45,
-      waveHeight: 22,
-      waveSpeed: 0.85,
-      zoom: 0.85,
+      color: 0x818cf8,
+      backgroundColor: 0x14123a,
     });
   }
 
