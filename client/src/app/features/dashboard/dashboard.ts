@@ -62,7 +62,8 @@ export class Dashboard implements OnInit {
         return renewal >= today && renewal <= windowEnd;
       })
       .sort((a, b) => a.nextRenewalDate!.localeCompare(b.nextRenewalDate!))
-      .slice(0, UPCOMING_RENEWAL_LIST_SIZE);
+      .slice(0, UPCOMING_RENEWAL_LIST_SIZE)
+      .map((subscription) => ({ subscription, daysUntil: this.daysUntil(subscription.nextRenewalDate!) }));
   });
 
   readonly spendByFrequency = computed(() => {
@@ -73,8 +74,33 @@ export class Dashboard implements OnInit {
       }
       totals.set(subscription.billingFrequency, (totals.get(subscription.billingFrequency) ?? 0) + 1);
     }
-    return Array.from(totals.entries()).map(([frequency, count]) => ({ frequency, count }));
+    return Array.from(totals.entries())
+      .map(([frequency, count]) => ({ frequency, count }))
+      .sort((a, b) => b.count - a.count);
   });
+
+  readonly spendByFrequencyMax = computed(() =>
+    Math.max(1, ...this.spendByFrequency().map((entry) => entry.count)),
+  );
+
+  readonly totalSubscriptions = computed(() => this.subscriptions().length);
+
+  initials(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]!.toUpperCase())
+      .join('');
+  }
+
+  private daysUntil(dateString: string): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(dateString);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
 
   ngOnInit(): void {
     // pageSize capped at the backend's max (GetSubscriptionsQueryValidator allows 1-100);

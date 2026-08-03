@@ -1,7 +1,11 @@
 <div class="dashboard-page">
+  <div class="dashboard-glow dashboard-glow-a"></div>
+  <div class="dashboard-glow dashboard-glow-b"></div>
+
   <div class="page-header">
     <div>
       <h1>{{ 'nav.dashboard' | translate }}</h1>
+      <p>{{ 'dashboard.subtitle' | translate }}</p>
     </div>
   </div>
 
@@ -13,8 +17,18 @@
     <p>{{ 'common.loading' | translate }}</p>
   } @else {
     <div class="kpi-grid">
+      <div class="kpi-card kpi-card-hero">
+        <div class="kpi-card-top">
+          <span class="kpi-icon kpi-icon-primary">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 2v16M4 6h9a3 3 0 0 1 0 6H6a3 3 0 0 0 0 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <span class="kpi-pill">{{ totalSubscriptions() }} {{ 'dashboard.totalSubscriptions' | translate }}</span>
+        </div>
+        <span class="kpi-label">{{ 'dashboard.estimatedMonthlySpend' | translate }}</span>
+        <span class="kpi-value kpi-value-hero">{{ estimatedMonthlySpend() | number: '1.2-2' }}</span>
+      </div>
       <div class="kpi-card">
-        <span class="kpi-icon kpi-icon-primary">
+        <span class="kpi-icon kpi-icon-success">
           <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14" stroke="currentColor" stroke-width="1.6"/></svg>
         </span>
         <span class="kpi-label">{{ 'dashboard.activeSubscriptions' | translate }}</span>
@@ -27,27 +41,32 @@
         <span class="kpi-label">{{ 'dashboard.trialSubscriptions' | translate }}</span>
         <span class="kpi-value">{{ trialCount() }}</span>
       </div>
-      <div class="kpi-card">
-        <span class="kpi-icon kpi-icon-success">
-          <svg viewBox="0 0 20 20" fill="none"><path d="M10 2v16M4 6h9a3 3 0 0 1 0 6H6a3 3 0 0 0 0 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </span>
-        <span class="kpi-label">{{ 'dashboard.estimatedMonthlySpend' | translate }}</span>
-        <span class="kpi-value">{{ estimatedMonthlySpend() | number: '1.2-2' }}</span>
-      </div>
     </div>
 
     <div class="panels">
       <section class="panel">
         <h2>{{ 'dashboard.upcomingRenewals' | translate }}</h2>
         @if (upcomingRenewals().length === 0) {
-          <p>{{ 'dashboard.noUpcomingRenewals' | translate }}</p>
+          <p class="panel-empty">{{ 'dashboard.noUpcomingRenewals' | translate }}</p>
         } @else {
           <ul class="renewal-list">
-            @for (subscription of upcomingRenewals(); track subscription.id) {
+            @for (entry of upcomingRenewals(); track entry.subscription.id) {
               <li>
-                <a [routerLink]="['/subscriptions', subscription.id]">{{ subscription.name }}</a>
-                <span>{{ subscription.nextRenewalDate }}</span>
-                <span>{{ subscription.amount }} {{ subscription.currencyCode }}</span>
+                <a class="renewal-row" [routerLink]="['/subscriptions', entry.subscription.id]">
+                  <span class="renewal-avatar">{{ initials(entry.subscription.name) }}</span>
+                  <span class="renewal-info">
+                    <span class="renewal-name">{{ entry.subscription.name }}</span>
+                    <span class="renewal-date">{{ entry.subscription.nextRenewalDate }}</span>
+                  </span>
+                  <span class="renewal-amount">{{ entry.subscription.amount }} {{ entry.subscription.currencyCode }}</span>
+                  <span
+                    class="renewal-days"
+                    [class.renewal-days-urgent]="entry.daysUntil <= 3"
+                    [class.renewal-days-soon]="entry.daysUntil > 3 && entry.daysUntil <= 7"
+                  >
+                    {{ entry.daysUntil === 0 ? ('dashboard.today' | translate) : ('dashboard.inDays' | translate: entry.daysUntil.toString()) }}
+                  </span>
+                </a>
               </li>
             }
           </ul>
@@ -57,13 +76,21 @@
       <section class="panel">
         <h2>{{ 'dashboard.spendByFrequency' | translate }}</h2>
         @if (spendByFrequency().length === 0) {
-          <p>{{ 'dashboard.noSubscriptions' | translate }}</p>
+          <p class="panel-empty">{{ 'dashboard.noSubscriptions' | translate }}</p>
         } @else {
-          <ul class="breakdown-list">
+          <ul class="frequency-chart">
             @for (entry of spendByFrequency(); track entry.frequency) {
               <li>
-                <span>{{ 'subscriptions.frequency.' + entry.frequency | translate }}</span>
-                <span>{{ entry.count }}</span>
+                <div class="frequency-row-head">
+                  <span>{{ 'subscriptions.frequency.' + entry.frequency | translate }}</span>
+                  <span class="frequency-count">{{ entry.count }}</span>
+                </div>
+                <div class="frequency-track">
+                  <div
+                    class="frequency-fill"
+                    [style.width.%]="(entry.count / spendByFrequencyMax()) * 100"
+                  ></div>
+                </div>
               </li>
             }
           </ul>

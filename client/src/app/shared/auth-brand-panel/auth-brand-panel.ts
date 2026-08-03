@@ -1,8 +1,7 @@
-import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
 import * as THREE from 'three';
-import NET, { VantaEffect } from 'vanta/dist/vanta.net.min';
+import WAVES, { VantaEffect } from 'vanta/dist/vanta.waves.min';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
-import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-auth-brand-panel',
@@ -14,7 +13,6 @@ import { ThemeService } from '../../core/services/theme.service';
 export class AuthBrandPanel implements AfterViewInit, OnDestroy {
   @ViewChild('vantaHost', { static: true }) private readonly vantaHost!: ElementRef<HTMLDivElement>;
 
-  private readonly themeService = inject(ThemeService);
   private effect: VantaEffect | null = null;
 
   ngAfterViewInit(): void {
@@ -23,9 +21,7 @@ export class AuthBrandPanel implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const isDark = this.themeService.theme() === 'dark';
-
-    this.effect = NET({
+    this.effect = WAVES({
       el: this.vantaHost.nativeElement,
       THREE,
       mouseControls: true,
@@ -35,12 +31,11 @@ export class AuthBrandPanel implements AfterViewInit, OnDestroy {
       minWidth: 200,
       scale: 1,
       scaleMobile: 1,
-      color: isDark ? 0x818cf8 : 0xffffff,
-      backgroundColor: isDark ? 0x14161a : 0x4f46e5,
-      points: 11,
-      maxDistance: 22,
-      spacing: 17,
-      showDots: true,
+      color: 0x4338ca,
+      shininess: 45,
+      waveHeight: 22,
+      waveSpeed: 0.85,
+      zoom: 0.85,
     });
   }
 
