@@ -4,39 +4,76 @@
 }
 
 .sidenav {
-  width: 220px;
+  width: 236px;
   flex-shrink: 0;
   background-color: var(--color-surface);
   border-inline-end: 1px solid var(--color-border);
-  padding: 1.25rem 1rem;
+  padding: 1.35rem 1rem;
 
   .brand {
-    font-weight: 700;
-    font-size: 1.05rem;
-    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 1.75rem;
+    padding: 0 0.35rem;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    color: var(--color-primary);
+  }
+
+  .brand-name {
+    font-family: var(--font-family-display);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
   }
 
   nav {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.2rem;
+  }
+
+  .nav-divider {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 0.6rem 0.35rem;
   }
 
   a {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
     padding: 0.55rem 0.75rem;
     border-radius: var(--radius-sm);
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
 
     &:hover {
-      background-color: var(--color-bg);
+      background-color: var(--color-surface-hover);
+      color: var(--color-text);
     }
 
     &.active {
-      background-color: var(--color-primary);
+      background-image: var(--gradient-primary);
       color: var(--color-primary-contrast);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+
+      .nav-icon {
+        opacity: 1;
+      }
     }
   }
 }
@@ -52,8 +89,13 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
+  background-color: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 18;
 }
 
 .topbar-spacer {
@@ -68,15 +110,21 @@
   padding: 0.4rem 0.7rem;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 
   &:hover {
-    background-color: var(--color-bg);
+    background-color: var(--color-surface-hover);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+    transform: translateY(-1px);
   }
 }
 
 .content {
   flex: 1;
-  padding: 1.5rem;
+  padding: 1.75rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .workspace-switcher {
@@ -98,8 +146,8 @@
   min-width: 220px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   list-style: none;
   margin: 0;
   padding: 0.35rem;
@@ -120,7 +168,7 @@
   color: var(--color-text);
 
   &:hover:not(:disabled) {
-    background-color: var(--color-bg);
+    background-color: var(--color-surface-hover);
   }
 
   &:disabled {
@@ -128,7 +176,7 @@
   }
 
   &.active {
-    background-color: var(--color-primary);
+    background-image: var(--gradient-primary);
     color: var(--color-primary-contrast);
   }
 }
@@ -175,8 +223,8 @@
   overflow-y: auto;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .notification-menu-header {
@@ -208,11 +256,11 @@
   }
 
   &:hover {
-    background-color: var(--color-bg);
+    background-color: var(--color-surface-hover);
   }
 
   &.unread {
-    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    background-color: var(--color-primary-soft);
   }
 }
 
@@ -288,5 +336,9 @@
     inset: 0;
     background: rgb(0 0 0 / 40%);
     z-index: 15;
+  }
+
+  .content {
+    padding: 1.25rem;
   }
 }

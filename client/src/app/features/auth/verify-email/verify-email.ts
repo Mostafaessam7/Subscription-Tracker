@@ -2,15 +2,15 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { AuthBrandPanel } from '../../../shared/auth-brand-panel/auth-brand-panel';
 
 type VerifyEmailState = 'verifying' | 'success' | 'error';
 
 @Component({
   selector: 'app-verify-email',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, AuthBrandPanel],
   templateUrl: './verify-email.html',
-  styleUrl: '../login/login.scss',
 })
 export class VerifyEmail implements OnInit {
   private readonly route = inject(ActivatedRoute);

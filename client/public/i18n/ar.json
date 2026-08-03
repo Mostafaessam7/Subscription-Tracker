@@ -1,5 +1,9 @@
 {
   "app.name": "متتبع الاشتراكات",
+  "app.tagline": "اعرف كل خصم دوري قبل ما يوصل لحسابك.",
+  "app.highlight.renewals": "تذكيرات التجديد وتتبع التجديد التلقائي",
+  "app.highlight.budgets": "ميزانيات مع تنبيهات تجاوز فورية",
+  "app.highlight.teams": "مصمم للفرق — أدوار، مساحات عمل، سجل تدقيق",
   "nav.dashboard": "لوحة التحكم",
   "nav.subscriptions": "الاشتراكات",
   "nav.budgets": "الميزانيات",
