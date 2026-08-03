@@ -25,9 +25,9 @@ public class GetMyWorkspacesQueryHandlerTests : IDisposable
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        _dbContext = new ApplicationDbContext(options);
 
         _currentUserService.UserId.Returns(_userId);
+        _dbContext = new ApplicationDbContext(options, _currentUserService);
         _handler = new GetMyWorkspacesQueryHandler(_workspaceRepository, _dbContext, _currentUserService);
     }
 

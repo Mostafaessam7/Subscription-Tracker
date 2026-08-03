@@ -24,9 +24,8 @@ public class ExportSubscriptionsCsvQueryHandlerTests : IDisposable
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        _dbContext = new ApplicationDbContext(options);
-
         _currentUserService.WorkspaceId.Returns(_workspaceId);
+        _dbContext = new ApplicationDbContext(options, _currentUserService);
         _handler = new ExportSubscriptionsCsvQueryHandler(_dbContext, _currentUserService);
     }
 
