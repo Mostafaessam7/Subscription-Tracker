@@ -39,6 +39,8 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-no-reply@subscriptiontracker.app}
       Smtp__FrontendBaseUrl: ${FRONTEND_BASE_URL:-http://localhost:4200}
+      OpenTelemetry__OtlpEndpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      SystemAdmin__BootstrapEmail: ${SYSTEM_ADMIN_BOOTSTRAP_EMAIL:-}
     ports:
       - "8080:8080"
     restart: unless-stopped
