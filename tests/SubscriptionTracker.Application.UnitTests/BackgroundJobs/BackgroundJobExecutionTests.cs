@@ -69,7 +69,8 @@ public class BackgroundJobExecutionTests : IDisposable
             .SetValue(subscription, today.AddDays(7));
         await _dbContext.SaveChangesAsync();
 
-        var job = new RenewalReminderJob(_dbContext, emailSender, timeProvider, NullLogger<RenewalReminderJob>.Instance);
+        var job = new RenewalReminderJob(
+            _dbContext, emailSender, Substitute.For<INotificationPublisher>(), timeProvider, NullLogger<RenewalReminderJob>.Instance);
         await job.Execute(_jobContext);
 
         await emailSender.Received(1).SendRenewalReminderAsync(
@@ -131,7 +132,7 @@ public class BackgroundJobExecutionTests : IDisposable
         CreateSubscription(new DateOnly(2026, 1, 1), autoRenewal: true);
         await _dbContext.SaveChangesAsync();
 
-        var job = new BudgetAlertJob(_dbContext, emailSender, NullLogger<BudgetAlertJob>.Instance);
+        var job = new BudgetAlertJob(_dbContext, emailSender, Substitute.For<INotificationPublisher>(), NullLogger<BudgetAlertJob>.Instance);
         await job.Execute(_jobContext);
 
         await emailSender.Received(1).SendBudgetOverspendAlertAsync(

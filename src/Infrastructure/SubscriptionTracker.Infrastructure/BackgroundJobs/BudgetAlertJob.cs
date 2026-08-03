@@ -4,6 +4,7 @@ using Quartz;
 using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Application.Budgets;
 using SubscriptionTracker.Domain.Common.ValueObjects;
+using SubscriptionTracker.Domain.Notifications;
 using SubscriptionTracker.Domain.Subscriptions.Enums;
 using SubscriptionTracker.Domain.Tenancy;
 
@@ -15,7 +16,8 @@ namespace SubscriptionTracker.Infrastructure.BackgroundJobs;
 /// counted - no currency conversion is performed.
 /// </summary>
 [DisallowConcurrentExecution]
-public sealed class BudgetAlertJob(IApplicationDbContext dbContext, IEmailSender emailSender, ILogger<BudgetAlertJob> logger) : IJob
+public sealed class BudgetAlertJob(
+    IApplicationDbContext dbContext, IEmailSender emailSender, INotificationPublisher notificationPublisher, ILogger<BudgetAlertJob> logger) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
@@ -76,6 +78,13 @@ public sealed class BudgetAlertJob(IApplicationDbContext dbContext, IEmailSender
 
             await emailSender.SendBudgetOverspendAlertAsync(
                 owner.Email, owner.FirstName, budget.Name, spent, budget.Amount.Amount, budget.Amount.CurrencyCode, cancellationToken);
+
+            await notificationPublisher.PublishAsync(
+                budget.WorkspaceId, ownerId, NotificationType.BudgetAlert,
+                "Budget threshold exceeded",
+                $"\"{budget.Name}\" is at {spent:0.##} of {budget.Amount.Amount:0.##} {budget.Amount.CurrencyCode}.",
+                budget.Id, cancellationToken);
+
             alertsSent++;
         }
 

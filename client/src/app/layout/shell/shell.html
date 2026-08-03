@@ -74,6 +74,49 @@
         </div>
       }
 
+      <div class="notification-bell">
+        <button
+          type="button"
+          class="icon-button notification-bell-toggle"
+          (click)="toggleNotificationMenu()"
+          [attr.aria-label]="'notifications.label' | translate"
+          [attr.aria-expanded]="isNotificationMenuOpen()"
+        >
+          🔔
+          @if (notificationService.unreadCount() > 0) {
+            <span class="notification-badge">{{ notificationService.unreadCount() }}</span>
+          }
+        </button>
+
+        @if (isNotificationMenuOpen()) {
+          <div class="notification-menu">
+            <div class="notification-menu-header">
+              <span>{{ 'notifications.label' | translate }}</span>
+              @if (notificationService.unreadCount() > 0) {
+                <button type="button" class="link-button" (click)="notificationService.markAllAsRead()">
+                  {{ 'notifications.markAllRead' | translate }}
+                </button>
+              }
+            </div>
+            <ul class="notification-list">
+              @for (notification of notificationService.notifications(); track notification.id) {
+                <li
+                  class="notification-item"
+                  [class.unread]="!notification.isRead"
+                  (click)="notificationService.markAsRead(notification.id)"
+                >
+                  <span class="notification-title">{{ notification.title }}</span>
+                  <span class="notification-message">{{ notification.message }}</span>
+                  <span class="notification-time">{{ notification.createdAtUtc | date: 'short' }}</span>
+                </li>
+              } @empty {
+                <li class="notification-empty">{{ 'notifications.empty' | translate }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
       <button
         type="button"
         class="icon-button"

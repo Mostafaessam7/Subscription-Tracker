@@ -23,6 +23,8 @@ public static class DependencyInjection
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<INotificationPublisher, NotificationPublisher>();
+        services.AddSignalR();
 
         services.AddExceptionHandler<Middleware.GlobalExceptionHandler>();
         services.AddProblemDetails();
@@ -78,6 +80,22 @@ public static class DependencyInjection
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30),
+                };
+
+                // SignalR's browser client can't attach an Authorization header to the WebSocket/SSE handshake,
+                // so it sends the token as an `access_token` query param instead - only honored for the hub path.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
                 };
             });
 
