@@ -63,6 +63,20 @@ describe('PermissionsService', () => {
     expect(service.hasAnyPermission(['catalog:manage'])).toBe(false);
   });
 
+  it('reports isSystemAdmin true only when the claim is exactly "true"', () => {
+    seedToken({ system_admin: 'true' });
+    expect(service.isSystemAdmin()).toBe(true);
+  });
+
+  it('reports isSystemAdmin false when the claim is absent', () => {
+    seedToken({ permission: ['subscriptions:view'] });
+    expect(service.isSystemAdmin()).toBe(false);
+  });
+
+  it('reports isSystemAdmin false when unauthenticated', () => {
+    expect(service.isSystemAdmin()).toBe(false);
+  });
+
   it('tolerates a malformed token by reporting no permissions', () => {
     tokenStorage.save({
       accessToken: 'not-a-real-jwt',

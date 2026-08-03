@@ -34,6 +34,7 @@ if (builder.Configuration.GetValue("ApplyMigrationsOnStartup", defaultValue: tru
     var dbContext = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
     await SystemRoleSeeder.SeedAsync(dbContext);
+    await SystemAdminSeeder.SeedAsync(dbContext, builder.Configuration);
 }
 
 app.UseExceptionHandler();

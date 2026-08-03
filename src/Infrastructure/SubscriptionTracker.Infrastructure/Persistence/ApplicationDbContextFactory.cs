@@ -25,6 +25,7 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
         public Guid? WorkspaceId => null;
         public string? Email => null;
         public bool IsAuthenticated => false;
+        public bool IsSystemAdmin => false;
         public bool HasPermission(string permissionCode) => false;
     }
 }

@@ -114,6 +114,15 @@ deployment, supply secrets (`Jwt__SigningKey`, `ConnectionStrings__SubscriptionT
 variables or a secret manager — never commit real secrets to `appsettings.Production.json`. The API refuses to
 start in the `Production` environment if `Jwt:SigningKey` is missing or still set to the development placeholder.
 
+### Bootstrapping the first system administrator
+
+Cross-tenant administration (`/api/v1/admin/*` — list every workspace/user, disable/enable accounts, system
+health counts) requires the `system_admin` JWT claim, which nothing in the product UI can grant — there's no
+"promote to admin" button, deliberately, since that would let any workspace owner grant themselves global access.
+Instead, set `SystemAdmin__BootstrapEmail` (or `SystemAdmin:BootstrapEmail` in `appsettings.*.json`) to the email
+of an already-registered user; on the next API startup, `SystemAdminSeeder` promotes that account idempotently.
+Unset the config key (or change it) once you no longer want new accounts auto-promoted on restart.
+
 ## License
 
 Not yet specified — add a `LICENSE` file before any public distribution.
