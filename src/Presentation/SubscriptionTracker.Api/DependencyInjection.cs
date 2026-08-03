@@ -83,8 +83,13 @@ public static class DependencyInjection
 
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+            options.AddPolicy(SystemAdminPolicy, policy => policy.RequireClaim("system_admin", "true")));
     }
+
+    /// <summary>Cross-tenant administration (see <see cref="Controllers.V1.AdminController"/>) - distinct from the
+    /// per-workspace "permission" claims, since a system admin isn't necessarily a member of any workspace.</summary>
+    public const string SystemAdminPolicy = "SystemAdmin";
 
     private static void AddApiVersioningAndSwagger(IServiceCollection services)
     {

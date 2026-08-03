@@ -6,5 +6,6 @@ public interface ICurrentUserService
     Guid? WorkspaceId { get; }
     string? Email { get; }
     bool IsAuthenticated { get; }
+    bool IsSystemAdmin { get; }
     bool HasPermission(string permissionCode);
 }

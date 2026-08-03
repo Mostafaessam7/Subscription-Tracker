@@ -1,0 +1,90 @@
+<div class="admin-page">
+  <h1>{{ 'admin.title' | translate }}</h1>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
+  }
+
+  @if (health(); as health) {
+    <section class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ health.totalUsers }}</span>
+        <span class="stat-label">{{ 'admin.totalUsers' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ health.totalWorkspaces }}</span>
+        <span class="stat-label">{{ 'admin.totalWorkspaces' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ health.activeSubscriptions }} / {{ health.totalSubscriptions }}</span>
+        <span class="stat-label">{{ 'admin.activeSubscriptions' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ health.totalBudgets }}</span>
+        <span class="stat-label">{{ 'admin.totalBudgets' | translate }}</span>
+      </div>
+    </section>
+  }
+
+  @if (isLoading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  } @else {
+    <section class="panel">
+      <h2>{{ 'admin.workspaces' | translate }}</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.workspaceName' | translate }}</th>
+            <th>{{ 'admin.owner' | translate }}</th>
+            <th>{{ 'admin.members' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (workspace of workspaces(); track workspace.id) {
+            <tr>
+              <td>{{ workspace.name }}</td>
+              <td>{{ workspace.ownerEmail }}</td>
+              <td>{{ workspace.memberCount }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="3" class="empty-row">{{ 'admin.noWorkspaces' | translate }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>{{ 'admin.users' | translate }}</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.email' | translate }}</th>
+            <th>{{ 'admin.status' | translate }}</th>
+            <th>{{ 'admin.systemAdmin' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>{{ user.firstName }} {{ user.lastName }} ({{ user.email }})</td>
+              <td>
+                <span class="status-badge" [attr.data-status]="user.status">{{ user.status }}</span>
+              </td>
+              <td>{{ (user.isSystemAdmin ? 'common.yes' : 'common.no') | translate }}</td>
+              <td>
+                @if (!user.isSystemAdmin) {
+                  <button type="button" class="link-button" (click)="toggleUserStatus(user)">
+                    {{ (user.status === 'Disabled' ? 'admin.enable' : 'admin.disable') | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="empty-row">{{ 'admin.noUsers' | translate }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</div>

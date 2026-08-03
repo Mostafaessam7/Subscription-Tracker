@@ -38,6 +38,7 @@ public sealed class User : AuditableAggregateRoot<Guid>
     public int FailedLoginAttempts { get; private set; }
     public DateTimeOffset? LockedUntilUtc { get; private set; }
     public DateTimeOffset? LastLoginAtUtc { get; private set; }
+    public bool IsSystemAdmin { get; private set; }
 
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
     public IReadOnlyCollection<VerificationToken> VerificationTokens => _verificationTokens.AsReadOnly();
@@ -120,6 +121,17 @@ public sealed class User : AuditableAggregateRoot<Guid>
     }
 
     public void Disable() => Status = UserStatus.Disabled;
+
+    public void Enable()
+    {
+        Status = UserStatus.Active;
+        FailedLoginAttempts = 0;
+        LockedUntilUtc = null;
+    }
+
+    public void GrantSystemAdmin() => IsSystemAdmin = true;
+
+    public void RevokeSystemAdmin() => IsSystemAdmin = false;
 
     public void EnableTwoFactor(string secret)
     {

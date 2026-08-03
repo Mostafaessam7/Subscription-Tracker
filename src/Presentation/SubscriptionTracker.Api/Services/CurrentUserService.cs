@@ -29,6 +29,8 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
 
     public string? Email => Principal?.FindFirstValue(ClaimTypes.Email);
 
+    public bool IsSystemAdmin => Principal?.FindFirstValue("system_admin") == "true";
+
     public bool HasPermission(string permissionCode) =>
         Principal?.Claims.Any(c => c.Type == "permission" && c.Value == permissionCode) ?? false;
 }

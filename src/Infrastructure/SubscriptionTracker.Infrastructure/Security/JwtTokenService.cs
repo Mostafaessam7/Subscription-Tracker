@@ -32,6 +32,11 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider t
             claims.Add(new Claim("workspace_id", workspaceId.Value.ToString()));
         }
 
+        if (user.IsSystemAdmin)
+        {
+            claims.Add(new Claim("system_admin", "true"));
+        }
+
         claims.AddRange(permissionCodes.Select(p => new Claim("permission", p)));
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));

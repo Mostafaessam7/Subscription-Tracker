@@ -37,6 +37,7 @@ export const routes: Routes = [
       { path: 'workspace', loadComponent: () => import('./features/workspace/workspace').then((m) => m.Workspace) },
       { path: 'audit-log', loadComponent: () => import('./features/audit-log/audit-log').then((m) => m.AuditLog) },
       { path: 'roles', loadComponent: () => import('./features/roles/roles').then((m) => m.Roles) },
+      { path: 'admin', loadComponent: () => import('./features/admin/admin').then((m) => m.Admin) },
       { path: 'security', loadComponent: () => import('./features/security/security').then((m) => m.Security) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
       {

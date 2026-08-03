@@ -15,6 +15,9 @@
       @if (permissions.hasPermission(Permissions.Workspace.ManageRoles)) {
         <a routerLink="/roles" routerLinkActive="active">{{ 'nav.roles' | translate }}</a>
       }
+      @if (permissions.isSystemAdmin()) {
+        <a routerLink="/admin" routerLinkActive="active">{{ 'nav.admin' | translate }}</a>
+      }
     </nav>
   </aside>
 

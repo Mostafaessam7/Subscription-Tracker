@@ -3,6 +3,7 @@ import { TokenStorageService } from './token-storage.service';
 
 interface DecodedAccessTokenPayload {
   permission?: string | string[];
+  system_admin?: string;
 }
 
 /**
@@ -21,6 +22,15 @@ export class PermissionsService {
   hasAnyPermission(codes: readonly string[]): boolean {
     const granted = this.currentPermissions();
     return codes.some((code) => granted.has(code));
+  }
+
+  isSystemAdmin(): boolean {
+    const token = this.tokenStorage.getAccessToken();
+    if (!token) {
+      return false;
+    }
+
+    return this.decodePayload(token)?.system_admin === 'true';
   }
 
   private currentPermissions(): Set<string> {
