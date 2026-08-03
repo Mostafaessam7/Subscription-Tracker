@@ -13,6 +13,7 @@ public class RegisterUserCommandHandlerTests
     private readonly IRepository<User, Guid> _userRepository = Substitute.For<IRepository<User, Guid>>();
     private readonly IRepository<Role, Guid> _roleRepository = Substitute.For<IRepository<Role, Guid>>();
     private readonly IRepository<Workspace, Guid> _workspaceRepository = Substitute.For<IRepository<Workspace, Guid>>();
+    private readonly IRepository<EmailInvitation, Guid> _emailInvitationRepository = Substitute.For<IRepository<EmailInvitation, Guid>>();
     private readonly IPasswordHasher _passwordHasher = Substitute.For<IPasswordHasher>();
     private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
 
@@ -21,9 +22,13 @@ public class RegisterUserCommandHandlerTests
     public RegisterUserCommandHandlerTests()
     {
         _passwordHasher.Hash(Arg.Any<string>()).Returns("hashed-password");
+        _emailInvitationRepository
+            .ListAsync(Arg.Any<Specification<EmailInvitation>>(), Arg.Any<CancellationToken>())
+            .Returns([]);
 
         _handler = new RegisterUserCommandHandler(
-            _userRepository, _roleRepository, _workspaceRepository, _passwordHasher, _emailSender, TimeProvider.System);
+            _userRepository, _roleRepository, _workspaceRepository, _emailInvitationRepository,
+            _passwordHasher, _emailSender, TimeProvider.System);
     }
 
     private static RegisterUserCommand ValidCommand() => new("jane@example.com", "Str0ngPass!", "Jane", "Doe", null);
@@ -58,5 +63,35 @@ public class RegisterUserCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Register.EmailAlreadyExists");
         _userRepository.DidNotReceive().Add(Arg.Any<User>());
+    }
+
+    [Fact]
+    public async Task Handle_WithAPendingEmailInvitation_ShouldAutoJoinTheInvitingWorkspace()
+    {
+        _userRepository.FirstOrDefaultAsync(Arg.Any<Specification<User>>(), Arg.Any<CancellationToken>())
+            .Returns((User?)null);
+
+        var invitedWorkspaceId = Guid.NewGuid();
+        var inviterRoleId = Guid.NewGuid();
+        var invitedRole = Role.Create("Viewer", null, invitedWorkspaceId, isSystemRole: true).Value;
+        var invitedWorkspace = Workspace.Create("Acme", Guid.NewGuid(), inviterRoleId, DateTimeOffset.UtcNow, invitedWorkspaceId).Value;
+
+        var email = Domain.Common.ValueObjects.Email.Create("jane@example.com").Value;
+        var invitation = EmailInvitation.Create(
+            invitedWorkspaceId, email, invitedRole.Id, Guid.NewGuid(), "hash",
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(7));
+
+        _emailInvitationRepository
+            .ListAsync(Arg.Any<Specification<EmailInvitation>>(), Arg.Any<CancellationToken>())
+            .Returns([invitation]);
+        _workspaceRepository.GetByIdAsync(invitedWorkspaceId, Arg.Any<CancellationToken>()).Returns(invitedWorkspace);
+
+        var result = await _handler.Handle(ValidCommand(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        invitedWorkspace.Members.Should().Contain(m => m.RoleId == invitedRole.Id);
+        invitation.IsConsumed.Should().BeTrue();
+        _workspaceRepository.Received(1).Update(invitedWorkspace);
+        _emailInvitationRepository.Received(1).Update(invitation);
     }
 }

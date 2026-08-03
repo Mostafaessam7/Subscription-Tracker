@@ -14,4 +14,7 @@ public interface IEmailSender
     Task SendBudgetOverspendAlertAsync(
         string toEmail, string recipientName, string budgetName, decimal spentAmount, decimal budgetAmount, string currencyCode,
         CancellationToken cancellationToken = default);
+
+    Task SendWorkspaceInvitationAsync(
+        string toEmail, string workspaceName, string inviterName, string invitationToken, CancellationToken cancellationToken = default);
 }
