@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SubscriptionTracker.Application.Abstractions;
+using SubscriptionTracker.Domain.Notifications;
 using SubscriptionTracker.Domain.Subscriptions.Enums;
 
 namespace SubscriptionTracker.Infrastructure.BackgroundJobs;
@@ -9,7 +10,8 @@ namespace SubscriptionTracker.Infrastructure.BackgroundJobs;
 /// <summary>Runs daily and emails subscription owners whose next renewal date matches one of their configured reminder-day thresholds.</summary>
 [DisallowConcurrentExecution]
 public sealed class RenewalReminderJob(
-    IApplicationDbContext dbContext, IEmailSender emailSender, TimeProvider timeProvider, ILogger<RenewalReminderJob> logger) : IJob
+    IApplicationDbContext dbContext, IEmailSender emailSender, INotificationPublisher notificationPublisher,
+    TimeProvider timeProvider, ILogger<RenewalReminderJob> logger) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
@@ -18,7 +20,7 @@ public sealed class RenewalReminderJob(
 
         var candidates = await dbContext.Subscriptions
             .Where(s => (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial) && s.NextRenewalDate != null)
-            .Select(s => new { s.Id, s.Name, s.OwnerId, s.NextRenewalDate, s.ReminderDaysBeforeRenewal })
+            .Select(s => new { s.Id, s.WorkspaceId, s.Name, s.OwnerId, s.NextRenewalDate, s.ReminderDaysBeforeRenewal })
             .ToListAsync(cancellationToken);
 
         var due = candidates
@@ -45,6 +47,11 @@ public sealed class RenewalReminderJob(
 
             await emailSender.SendRenewalReminderAsync(
                 owner.Email, owner.FirstName, subscription.Name, subscription.NextRenewalDate!.Value, cancellationToken);
+
+            await notificationPublisher.PublishAsync(
+                subscription.WorkspaceId, subscription.OwnerId, NotificationType.RenewalReminder,
+                "Upcoming renewal", $"{subscription.Name} renews on {subscription.NextRenewalDate!.Value:yyyy-MM-dd}.",
+                subscription.Id, cancellationToken);
         }
 
         logger.LogInformation("Sent {Count} renewal reminder email(s)", due.Count);

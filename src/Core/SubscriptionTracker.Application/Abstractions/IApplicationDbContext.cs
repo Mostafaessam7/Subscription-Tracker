@@ -2,6 +2,7 @@ using SubscriptionTracker.Domain.Auditing;
 using SubscriptionTracker.Domain.Budgets;
 using SubscriptionTracker.Domain.Catalog;
 using SubscriptionTracker.Domain.Identity;
+using SubscriptionTracker.Domain.Notifications;
 using SubscriptionTracker.Domain.Subscriptions;
 using SubscriptionTracker.Domain.Tenancy;
 
@@ -19,4 +20,5 @@ public interface IApplicationDbContext
     IQueryable<Subscription> Subscriptions { get; }
     IQueryable<Budget> Budgets { get; }
     IQueryable<AuditLogEntry> AuditLogs { get; }
+    IQueryable<Notification> Notifications { get; }
 }

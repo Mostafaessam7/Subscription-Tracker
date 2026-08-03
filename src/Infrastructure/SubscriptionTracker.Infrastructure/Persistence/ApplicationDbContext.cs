@@ -5,6 +5,7 @@ using SubscriptionTracker.Domain.Budgets;
 using SubscriptionTracker.Domain.Catalog;
 using SubscriptionTracker.Domain.Common;
 using SubscriptionTracker.Domain.Identity;
+using SubscriptionTracker.Domain.Notifications;
 using SubscriptionTracker.Domain.Subscriptions;
 using SubscriptionTracker.Domain.Tenancy;
 
@@ -22,6 +23,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     IQueryable<User> IApplicationDbContext.Users => Users.AsNoTracking();
     IQueryable<Role> IApplicationDbContext.Roles => Roles.AsNoTracking();
@@ -32,6 +34,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     IQueryable<Subscription> IApplicationDbContext.Subscriptions => Subscriptions.AsNoTracking();
     IQueryable<Budget> IApplicationDbContext.Budgets => Budgets.AsNoTracking();
     IQueryable<AuditLogEntry> IApplicationDbContext.AuditLogs => AuditLogs.AsNoTracking();
+    IQueryable<Notification> IApplicationDbContext.Notifications => Notifications.AsNoTracking();
 
     /// <summary>
     /// Backs the tenant-isolation query filters below. Read lazily (not captured) so it reflects whatever the
@@ -71,6 +74,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => !e.IsDeleted && (CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId));
         modelBuilder.Entity<Subscription>().HasQueryFilter(e => !e.IsDeleted && (CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId));
         modelBuilder.Entity<Budget>().HasQueryFilter(e => !e.IsDeleted && (CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId));
+        modelBuilder.Entity<Notification>().HasQueryFilter(e => CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId);
     }
 
     async Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) =>

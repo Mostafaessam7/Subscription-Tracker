@@ -63,6 +63,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<SubscriptionTracker.Api.Hubs.NotificationsHub>("/hubs/notifications");
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {

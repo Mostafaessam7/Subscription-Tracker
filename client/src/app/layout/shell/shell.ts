@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -5,13 +6,14 @@ import { ThemeService } from '../../core/services/theme.service';
 import { TranslationService } from '../../core/services/translation.service';
 import { PermissionsService } from '../../core/services/permissions.service';
 import { WorkspaceContextService } from '../../core/services/workspace-context.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
 import { Permissions } from '../../core/models/permissions';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, DatePipe],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
@@ -23,15 +25,22 @@ export class Shell {
   protected readonly themeService = inject(ThemeService);
   protected readonly translationService = inject(TranslationService);
   protected readonly permissions = inject(PermissionsService);
+  protected readonly notificationService = inject(NotificationService);
   protected readonly Permissions = Permissions;
 
   readonly isNavOpen = signal(false);
   readonly isWorkspaceMenuOpen = signal(false);
+  readonly isNotificationMenuOpen = signal(false);
   readonly workspaces = this.workspaceContext.workspaces;
   readonly isSwitchingWorkspace = signal(false);
 
   constructor() {
     this.workspaceContext.refresh();
+    this.notificationService.connect();
+  }
+
+  toggleNotificationMenu(): void {
+    this.isNotificationMenuOpen.update((open) => !open);
   }
 
   get currentWorkspaceName(): string | null {
@@ -39,6 +48,7 @@ export class Shell {
   }
 
   logout(): void {
+    this.notificationService.disconnect();
     this.authService.logout().subscribe({
       complete: () => this.router.navigateByUrl('/auth/login'),
     });
