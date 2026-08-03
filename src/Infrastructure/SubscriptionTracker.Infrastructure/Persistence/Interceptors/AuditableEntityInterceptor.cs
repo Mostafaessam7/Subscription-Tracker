@@ -62,10 +62,22 @@ public sealed class AuditableEntityInterceptor(ICurrentUserService currentUserSe
     {
         foreach (var reference in entry.References.Where(r => r.TargetEntry is { State: EntityState.Deleted }))
         {
-            if (reference.TargetEntry!.Entity is ISoftDeletable softDeletable)
+            var targetEntry = reference.TargetEntry!;
+
+            if (targetEntry.Entity is ISoftDeletable softDeletable)
             {
-                reference.TargetEntry.State = EntityState.Modified;
+                targetEntry.State = EntityState.Modified;
                 softDeletable.Delete(DateTimeOffset.UtcNow, null);
+            }
+            else if (targetEntry.Metadata.IsOwned())
+            {
+                // Owned value objects (e.g. Budget.Amount, a Money value object mapped via OwnsOne into the
+                // same table) aren't soft-deletable themselves, but EF Core still tracks them as their own
+                // ChangeTracker entry. Left at EntityState.Deleted while their owner above is flipped to
+                // Modified, the two contradict each other and SaveChangesAsync throws - reproduced by actually
+                // deleting a budget through the API, not caught by any handler-level unit test since those
+                // never exercise the real interceptor pipeline against a real DbContext save.
+                targetEntry.State = EntityState.Modified;
             }
         }
     }
