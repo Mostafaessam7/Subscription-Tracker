@@ -19,7 +19,7 @@ namespace SubscriptionTracker.Api;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -31,7 +31,7 @@ public static class DependencyInjection
 
         AddJwtAuthentication(services, configuration);
         AddApiVersioningAndSwagger(services);
-        AddCors(services, configuration);
+        AddCors(services, configuration, environment);
         AddRateLimiting(services);
         AddResponseCompression(services);
         AddHealthChecks(services, configuration);
@@ -42,18 +42,33 @@ public static class DependencyInjection
 
     public const string FrontendCorsPolicy = "Frontend";
 
-    private static void AddCors(IServiceCollection services, IConfiguration configuration)
+    private static readonly System.Text.RegularExpressions.Regex LocalhostOriginPattern =
+        new(@"^https?://localhost:\d+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static void AddCors(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
             ?? ["http://localhost:4200"];
 
         services.AddCors(options =>
         {
-            options.AddPolicy(FrontendCorsPolicy, policy => policy
-                .WithOrigins(allowedOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials());
+            options.AddPolicy(FrontendCorsPolicy, policy =>
+            {
+                policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+
+                // In Development, tooling (Angular CLI, Visual Studio's SPA proxy, IIS Express) can put the
+                // frontend on any localhost port, not just the one configured origin - so widen the CORS check
+                // to any localhost port rather than requiring Cors:AllowedOrigins to be kept in sync with
+                // whichever dev host happened to pick a port this run. Production still uses the explicit list.
+                if (environment.IsDevelopment())
+                {
+                    policy.SetIsOriginAllowed(origin => LocalhostOriginPattern.IsMatch(origin));
+                }
+                else
+                {
+                    policy.WithOrigins(allowedOrigins);
+                }
+            });
         });
     }
 
