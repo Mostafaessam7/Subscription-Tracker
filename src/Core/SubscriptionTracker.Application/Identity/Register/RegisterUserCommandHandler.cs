@@ -6,6 +6,7 @@ using SubscriptionTracker.Domain.Common.ValueObjects;
 using SubscriptionTracker.Domain.Identity;
 using SubscriptionTracker.Domain.Identity.Specifications;
 using SubscriptionTracker.Domain.Tenancy;
+using SubscriptionTracker.Domain.Tenancy.Specifications;
 
 namespace SubscriptionTracker.Application.Identity.Register;
 
@@ -13,6 +14,7 @@ public sealed class RegisterUserCommandHandler(
     IRepository<User, Guid> userRepository,
     IRepository<Role, Guid> roleRepository,
     IRepository<Workspace, Guid> workspaceRepository,
+    IRepository<EmailInvitation, Guid> emailInvitationRepository,
     IPasswordHasher passwordHasher,
     IEmailSender emailSender,
     TimeProvider timeProvider)
@@ -79,8 +81,40 @@ public sealed class RegisterUserCommandHandler(
         roleRepository.Add(role);
         workspaceRepository.Add(workspaceResult.Value);
 
+        await ConsumeMatchingEmailInvitationsAsync(user, emailResult.Value, now, cancellationToken);
+
         await emailSender.SendEmailVerificationAsync(user.Email.Value, user.FullName, user.Id, rawVerificationToken, cancellationToken);
 
         return new RegisterUserResponse(user.Id, workspaceResult.Value.Id);
+    }
+
+    /// <summary>
+    /// Auto-joins the new account to every workspace that invited this email address before they had an account
+    /// (see InviteMemberCommandHandler's EmailInvitation branch) - added as an Invited member, same as the
+    /// existing-user invite flow, so they still see and explicitly accept it via the pending-invitations panel.
+    /// </summary>
+    private async Task ConsumeMatchingEmailInvitationsAsync(
+        User newUser, Email email, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var invitations = await emailInvitationRepository.ListAsync(new EmailInvitationsByEmailSpecification(email), cancellationToken);
+
+        foreach (var invitation in invitations.Where(i => i.IsValid))
+        {
+            var invitedWorkspace = await workspaceRepository.GetByIdAsync(invitation.WorkspaceId, cancellationToken);
+            if (invitedWorkspace is null)
+            {
+                continue;
+            }
+
+            var inviteResult = invitedWorkspace.InviteMember(newUser.Id, invitation.RoleId, now);
+            if (inviteResult.IsFailure)
+            {
+                continue;
+            }
+
+            invitation.Consume();
+            workspaceRepository.Update(invitedWorkspace);
+            emailInvitationRepository.Update(invitation);
+        }
     }
 }

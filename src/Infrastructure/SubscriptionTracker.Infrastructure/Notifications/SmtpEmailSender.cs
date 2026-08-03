@@ -69,6 +69,27 @@ public sealed class SmtpEmailSender(IOptions<SmtpOptions> options, ILogger<SmtpE
         return SendAsync(toEmail, $"Budget alert: {budgetName}", body, cancellationToken);
     }
 
+    public Task SendWorkspaceInvitationAsync(
+        string toEmail, string workspaceName, string inviterName, string invitationToken, CancellationToken cancellationToken = default)
+    {
+        // Unlike the other links here, this one doesn't carry the token as a query param - the invitation is
+        // matched by email at registration time (RegisterUserCommandHandler), not by round-tripping this token
+        // back through the registration form. It's still hashed and stored so a future "accept via link" flow
+        // could verify it without a schema change.
+        var link = $"{_options.FrontendBaseUrl.TrimEnd('/')}/auth/register";
+        _ = invitationToken;
+
+        var body = $"""
+            <p>Hi,</p>
+            <p><strong>{inviterName}</strong> has invited you to join the <strong>{workspaceName}</strong> workspace on Subscription Tracker.</p>
+            <p>Create an account using this email address ({toEmail}) to automatically join once you sign up:</p>
+            <p><a href="{link}">Create my account</a></p>
+            <p>If you already have an account, just sign in and you'll see the invitation waiting for you to accept.</p>
+            """;
+
+        return SendAsync(toEmail, $"You've been invited to join {workspaceName}", body, cancellationToken);
+    }
+
     private async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_options.Host))

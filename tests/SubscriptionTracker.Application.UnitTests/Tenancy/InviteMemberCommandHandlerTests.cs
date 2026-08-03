@@ -14,31 +14,73 @@ public class InviteMemberCommandHandlerTests
     private readonly IRepository<Workspace, Guid> _workspaceRepository = Substitute.For<IRepository<Workspace, Guid>>();
     private readonly IRepository<User, Guid> _userRepository = Substitute.For<IRepository<User, Guid>>();
     private readonly IRepository<Role, Guid> _roleRepository = Substitute.For<IRepository<Role, Guid>>();
+    private readonly IRepository<EmailInvitation, Guid> _emailInvitationRepository = Substitute.For<IRepository<EmailInvitation, Guid>>();
+    private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
     private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
 
     private readonly InviteMemberCommandHandler _handler;
     private readonly Guid _workspaceId = Guid.NewGuid();
     private readonly Guid _ownerId = Guid.NewGuid();
     private readonly Guid _ownerRoleId = Guid.NewGuid();
+    private readonly Guid _currentUserId = Guid.NewGuid();
 
     public InviteMemberCommandHandlerTests()
     {
         _currentUserService.WorkspaceId.Returns(_workspaceId);
+        _currentUserService.UserId.Returns(_currentUserId);
+        _currentUserService.Email.Returns("owner@example.com");
+
+        _emailInvitationRepository
+            .ListAsync(Arg.Any<Specification<EmailInvitation>>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
         _handler = new InviteMemberCommandHandler(
-            _workspaceRepository, _userRepository, _roleRepository, _currentUserService, TimeProvider.System);
+            _workspaceRepository, _userRepository, _roleRepository, _emailInvitationRepository,
+            _emailSender, _currentUserService, TimeProvider.System);
     }
 
     private Workspace CreateWorkspace() => Workspace.Create("Acme", _ownerId, _ownerRoleId, DateTimeOffset.UtcNow, _workspaceId).Value;
 
     [Fact]
-    public async Task Handle_WithUnregisteredEmail_ShouldFailWithNotFound()
+    public async Task Handle_WithUnregisteredEmail_ShouldCreateAnEmailInvitationAndSendAnEmail()
     {
-        _userRepository.FirstOrDefaultAsync(Arg.Any<Specification<User>>(), Arg.Any<CancellationToken>()).Returns((User?)null);
+        var role = Role.Create("Member", null, workspaceId: null, isSystemRole: true).Value;
+        var workspace = CreateWorkspace();
 
-        var result = await _handler.Handle(new InviteMemberCommand("nobody@example.com", Guid.NewGuid()), CancellationToken.None);
+        _userRepository.FirstOrDefaultAsync(Arg.Any<Specification<User>>(), Arg.Any<CancellationToken>()).Returns((User?)null);
+        _roleRepository.GetByIdAsync(role.Id, Arg.Any<CancellationToken>()).Returns(role);
+        _workspaceRepository.GetByIdAsync(_workspaceId, Arg.Any<CancellationToken>()).Returns(workspace);
+
+        var result = await _handler.Handle(new InviteMemberCommand("nobody@example.com", role.Id), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _emailInvitationRepository.Received(1).Add(Arg.Is<EmailInvitation>(i =>
+            i.Email.Value == "nobody@example.com" && i.WorkspaceId == _workspaceId && i.RoleId == role.Id));
+        await _emailSender.Received(1).SendWorkspaceInvitationAsync(
+            "nobody@example.com", "Acme", "owner@example.com", Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WithUnregisteredEmailAlreadyInvitedToThisWorkspace_ShouldFailWithConflict()
+    {
+        var role = Role.Create("Member", null, workspaceId: null, isSystemRole: true).Value;
+        var workspace = CreateWorkspace();
+        var email = Email.Create("nobody@example.com").Value;
+        var existingInvitation = EmailInvitation.Create(
+            _workspaceId, email, role.Id, _currentUserId, "hash", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(7));
+
+        _userRepository.FirstOrDefaultAsync(Arg.Any<Specification<User>>(), Arg.Any<CancellationToken>()).Returns((User?)null);
+        _roleRepository.GetByIdAsync(role.Id, Arg.Any<CancellationToken>()).Returns(role);
+        _workspaceRepository.GetByIdAsync(_workspaceId, Arg.Any<CancellationToken>()).Returns(workspace);
+        _emailInvitationRepository
+            .ListAsync(Arg.Any<Specification<EmailInvitation>>(), Arg.Any<CancellationToken>())
+            .Returns([existingInvitation]);
+
+        var result = await _handler.Handle(new InviteMemberCommand("nobody@example.com", role.Id), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("InviteMember.UserNotFound");
+        result.Error.Code.Should().Be("InviteMember.AlreadyInvited");
+        _emailInvitationRepository.DidNotReceive().Add(Arg.Any<EmailInvitation>());
     }
 
     [Fact]
@@ -62,10 +104,8 @@ public class InviteMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WithRoleFromAnotherWorkspace_ShouldFailWithNotFound()
     {
-        var invitedUser = User.Register(Email.Create("jane@example.com").Value, "hash", "Jane", "Doe").Value;
         var foreignRole = Role.Create("Custom", null, workspaceId: Guid.NewGuid()).Value;
 
-        _userRepository.FirstOrDefaultAsync(Arg.Any<Specification<User>>(), Arg.Any<CancellationToken>()).Returns(invitedUser);
         _roleRepository.GetByIdAsync(foreignRole.Id, Arg.Any<CancellationToken>()).Returns(foreignRole);
 
         var result = await _handler.Handle(new InviteMemberCommand("jane@example.com", foreignRole.Id), CancellationToken.None);

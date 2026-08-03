@@ -24,6 +24,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<EmailInvitation> EmailInvitations => Set<EmailInvitation>();
 
     IQueryable<User> IApplicationDbContext.Users => Users.AsNoTracking();
     IQueryable<Role> IApplicationDbContext.Roles => Roles.AsNoTracking();
@@ -75,6 +76,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         modelBuilder.Entity<Subscription>().HasQueryFilter(e => !e.IsDeleted && (CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId));
         modelBuilder.Entity<Budget>().HasQueryFilter(e => !e.IsDeleted && (CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId));
         modelBuilder.Entity<Notification>().HasQueryFilter(e => CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<EmailInvitation>().HasQueryFilter(e => CurrentWorkspaceId == null || e.WorkspaceId == CurrentWorkspaceId);
     }
 
     async Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) =>
