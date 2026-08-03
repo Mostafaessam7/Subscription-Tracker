@@ -340,11 +340,27 @@ textarea:not(.field textarea) {
 }
 
 .auth-form-panel {
+  /* The form panel always renders with these fixed light values, independent of the app's
+     dark/light theme setting — the brand panel already carries a fixed dark identity (the
+     Vanta backdrop), so letting this side also flip to near-black in dark mode made the two
+     panels visually merge into one undifferentiated block. Auth pages render before a user has
+     any reason to care about their in-app theme preference, so a single, always-legible look
+     here is simpler than wiring up a theme toggle nobody's logged in yet to see. */
+  --color-bg: #f4f5f9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f7f8fc;
+  --color-border: #e3e5ee;
+  --color-text: #14161f;
+  --color-text-muted: #676d7d;
+  --color-primary-soft: #eef0fd;
+  --color-danger-soft: #fef2f2;
+
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
   background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 .auth-card {

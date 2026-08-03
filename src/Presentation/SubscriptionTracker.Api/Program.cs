@@ -22,7 +22,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApi(builder.Configuration);
+builder.Services.AddApi(builder.Configuration, builder.Environment);
 
 ProductionSecretsGuard.EnsureJwtSigningKeyIsConfigured(builder.Configuration, builder.Environment.IsProduction());
 
