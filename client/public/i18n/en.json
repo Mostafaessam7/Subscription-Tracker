@@ -156,6 +156,7 @@
   "reports.exportHint": "Exports respect the filters above.",
   "reports.exportCsv": "Export as CSV",
   "reports.exportExcel": "Export as Excel",
+  "reports.exportPdf": "Export as PDF",
   "budgets.createTitle": "Add a budget",
   "budgets.editTitle": "Edit budget",
   "budgets.name": "Budget name",

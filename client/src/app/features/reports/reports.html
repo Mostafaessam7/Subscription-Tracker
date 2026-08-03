@@ -42,6 +42,9 @@
         <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportExcel()">
           {{ 'reports.exportExcel' | translate }}
         </button>
+        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportPdf()">
+          {{ 'reports.exportPdf' | translate }}
+        </button>
       </div>
     </section>
   }

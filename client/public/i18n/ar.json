@@ -156,6 +156,7 @@
   "reports.exportHint": "يعتمد التصدير على عوامل التصفية أعلاه.",
   "reports.exportCsv": "تصدير كـ CSV",
   "reports.exportExcel": "تصدير كـ Excel",
+  "reports.exportPdf": "تصدير كـ PDF",
   "budgets.createTitle": "إضافة ميزانية",
   "budgets.editTitle": "تعديل الميزانية",
   "budgets.name": "اسم الميزانية",
