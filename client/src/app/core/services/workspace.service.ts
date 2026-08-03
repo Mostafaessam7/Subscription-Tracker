@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   AssignableRole,
   InviteMemberRequest,
+  MyWorkspaceSummary,
   PendingInvitation,
   UpdateWorkspaceSettingsRequest,
   Workspace,
@@ -17,6 +18,10 @@ export class WorkspaceService {
 
   getMyWorkspace(): Observable<Workspace> {
     return this.http.get<Workspace>(this.baseUrl);
+  }
+
+  getMyWorkspaces(): Observable<MyWorkspaceSummary[]> {
+    return this.http.get<MyWorkspaceSummary[]>(`${this.baseUrl}/my-workspaces`);
   }
 
   getAssignableRoles(): Observable<AssignableRole[]> {

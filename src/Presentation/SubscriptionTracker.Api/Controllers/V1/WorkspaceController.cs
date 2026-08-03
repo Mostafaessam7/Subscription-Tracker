@@ -9,6 +9,7 @@ using SubscriptionTracker.Application.Tenancy.AcceptInvitation;
 using SubscriptionTracker.Application.Tenancy.ChangeMemberRole;
 using SubscriptionTracker.Application.Tenancy.GetAssignableRoles;
 using SubscriptionTracker.Application.Tenancy.GetMyWorkspace;
+using SubscriptionTracker.Application.Tenancy.GetMyWorkspaces;
 using SubscriptionTracker.Application.Tenancy.GetPendingInvitations;
 using SubscriptionTracker.Application.Tenancy.InviteMember;
 using SubscriptionTracker.Application.Tenancy.RemoveMember;
@@ -27,6 +28,13 @@ public sealed class WorkspaceController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetMyWorkspace(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetMyWorkspaceQuery(), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("my-workspaces")]
+    public async Task<IActionResult> GetMyWorkspaces(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetMyWorkspacesQuery(), cancellationToken);
         return result.ToActionResult(this);
     }
 

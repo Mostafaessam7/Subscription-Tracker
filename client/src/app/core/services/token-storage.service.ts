@@ -51,6 +51,10 @@ export class TokenStorageService {
     return localStorage.getItem(WORKSPACE_ID_KEY);
   }
 
+  setWorkspaceId(workspaceId: string): void {
+    localStorage.setItem(WORKSPACE_ID_KEY, workspaceId);
+  }
+
   getUserId(): string | null {
     return localStorage.getItem(USER_ID_KEY);
   }

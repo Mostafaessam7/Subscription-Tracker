@@ -31,6 +31,43 @@
         ☰
       </button>
       <div class="topbar-spacer"></div>
+
+      @if (workspaces().length > 0) {
+        <div class="workspace-switcher">
+          <button
+            type="button"
+            class="icon-button workspace-switcher-toggle"
+            (click)="toggleWorkspaceMenu()"
+            [attr.aria-label]="'workspace.switcher.label' | translate"
+            [attr.aria-expanded]="isWorkspaceMenuOpen()"
+            [disabled]="isSwitchingWorkspace()"
+          >
+            {{ currentWorkspaceName ?? ('workspace.switcher.label' | translate) }} ▾
+          </button>
+
+          @if (isWorkspaceMenuOpen()) {
+            <ul class="workspace-menu" role="menu">
+              @for (workspace of workspaces(); track workspace.id) {
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitemradio"
+                    [attr.aria-checked]="workspace.isCurrent"
+                    class="workspace-menu-item"
+                    [class.active]="workspace.isCurrent"
+                    [disabled]="workspace.isCurrent || isSwitchingWorkspace()"
+                    (click)="switchWorkspace(workspace.id)"
+                  >
+                    <span class="workspace-name">{{ workspace.name }}</span>
+                    <span class="workspace-role">{{ workspace.roleName }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
       <button
         type="button"
         class="icon-button"

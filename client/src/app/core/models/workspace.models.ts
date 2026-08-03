@@ -42,3 +42,11 @@ export interface InviteMemberRequest {
   email: string;
   roleId: string;
 }
+
+export interface MyWorkspaceSummary {
+  id: string;
+  name: string;
+  roleName: string;
+  isOwner: boolean;
+  isCurrent: boolean;
+}

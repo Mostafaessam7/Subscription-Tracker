@@ -55,6 +55,25 @@ export class AuthService {
       );
   }
 
+  /**
+   * Re-issues tokens scoped to a different workspace the user is an active member of, reusing the same
+   * refresh-token endpoint the silent-refresh flow already uses (it accepts an explicit target workspaceId and
+   * validates membership server-side). Callers should do a full navigation afterwards so every component
+   * re-fetches data under the new workspace context rather than trying to patch cached state in place.
+   */
+  switchWorkspace(workspaceId: string): Observable<RefreshTokenResponse> {
+    const refreshToken = this.tokenStorage.getRefreshToken();
+
+    return this.http
+      .post<RefreshTokenResponse>(`${environment.apiBaseUrl}/auth/refresh-token`, { refreshToken, workspaceId })
+      .pipe(
+        tap((response) => {
+          this.tokenStorage.updateTokens(response.accessToken, response.accessTokenExpiresAtUtc, response.refreshToken);
+          this.tokenStorage.setWorkspaceId(workspaceId);
+        }),
+      );
+  }
+
   logout(): Observable<void> {
     const refreshToken = this.tokenStorage.getRefreshToken();
 

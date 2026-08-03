@@ -11,6 +11,7 @@
   "nav.logout": "تسجيل الخروج",
   "nav.toggleMenu": "تبديل قائمة التنقل",
   "nav.switchLanguage": "تغيير اللغة",
+  "workspace.switcher.label": "تبديل مساحة العمل",
   "theme.toggle": "تبديل المظهر",
   "auth.login.title": "تسجيل الدخول",
   "auth.login.email": "البريد الإلكتروني",
