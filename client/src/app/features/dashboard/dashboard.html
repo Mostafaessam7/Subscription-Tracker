@@ -4,6 +4,7 @@
 
   <div class="page-header">
     <div>
+      <span class="page-eyebrow">{{ 'dashboard.eyebrow' | translate }}</span>
       <h1>{{ 'nav.dashboard' | translate }}</h1>
       <p>{{ 'dashboard.subtitle' | translate }}</p>
     </div>
@@ -45,9 +46,17 @@
 
     <div class="panels">
       <section class="panel">
-        <h2>{{ 'dashboard.upcomingRenewals' | translate }}</h2>
+        <h2>
+          <span class="panel-icon">
+            <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          {{ 'dashboard.upcomingRenewals' | translate }}
+        </h2>
         @if (upcomingRenewals().length === 0) {
-          <p class="panel-empty">{{ 'dashboard.noUpcomingRenewals' | translate }}</p>
+          <div class="panel-empty">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 6v4l2.5 2M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>{{ 'dashboard.noUpcomingRenewals' | translate }}</p>
+          </div>
         } @else {
           <ul class="renewal-list">
             @for (entry of upcomingRenewals(); track entry.subscription.id) {
@@ -74,9 +83,17 @@
       </section>
 
       <section class="panel">
-        <h2>{{ 'dashboard.spendByFrequency' | translate }}</h2>
+        <h2>
+          <span class="panel-icon">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 16V9M10 16V4M16 16v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          {{ 'dashboard.spendByFrequency' | translate }}
+        </h2>
         @if (spendByFrequency().length === 0) {
-          <p class="panel-empty">{{ 'dashboard.noSubscriptions' | translate }}</p>
+          <div class="panel-empty">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 16V9M10 16V4M16 16v-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <p>{{ 'dashboard.noSubscriptions' | translate }}</p>
+          </div>
         } @else {
           <ul class="frequency-chart">
             @for (entry of spendByFrequency(); track entry.frequency) {

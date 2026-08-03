@@ -226,6 +226,16 @@ button {
   }
 }
 
+.page-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 0.3rem;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

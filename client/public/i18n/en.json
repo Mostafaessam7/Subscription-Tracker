@@ -70,6 +70,7 @@
   "auth.resetPassword.invalidLink": "This reset link is invalid or missing required parameters.",
   "auth.resetPassword.error": "This reset link is invalid or has expired.",
   "auth.resetPassword.mismatch": "Passwords do not match.",
+  "dashboard.eyebrow": "Overview",
   "dashboard.subtitle": "Here's where your recurring spend stands right now.",
   "dashboard.totalSubscriptions": "total",
   "dashboard.today": "Today",
