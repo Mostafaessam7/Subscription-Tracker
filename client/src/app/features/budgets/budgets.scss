@@ -3,11 +3,6 @@
   flex-direction: column;
   gap: 1.5rem;
   max-width: 900px;
-
-  h1 {
-    margin: 0;
-    font-size: 1.4rem;
-  }
 }
 
 .budget-grid {
@@ -17,16 +12,40 @@
 }
 
 .budget-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: var(--gradient-primary);
+    opacity: 0.6;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
 
   &.over-threshold {
-    border-color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+
+    &::before {
+      background-image: none;
+      background-color: var(--color-danger);
+      opacity: 1;
+    }
   }
 }
 
@@ -38,14 +57,17 @@
   h2 {
     margin: 0;
     font-size: 1.05rem;
+    font-weight: 700;
   }
 }
 
 .period-badge {
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  background-color: var(--color-border);
-  font-size: 0.75rem;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .budget-category {
@@ -54,17 +76,37 @@
   font-size: 0.85rem;
 }
 
+.budget-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--color-bg-subtle);
+  overflow: hidden;
+}
+
+.budget-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background-image: var(--gradient-primary);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .over-threshold & {
+    background-image: none;
+    background-color: var(--color-danger);
+  }
+}
+
 .budget-progress {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .exceeded-label {
   color: var(--color-danger);
-  font-weight: 600;
-  font-size: 0.8rem;
+  font-weight: 700;
+  font-size: 0.78rem;
 }
 
 .threshold-note {
@@ -75,8 +117,8 @@
 
 .budget-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .link-button {
@@ -85,6 +127,7 @@
   color: var(--color-primary);
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
   padding: 0;
 
   &.danger {
@@ -92,19 +135,54 @@
   }
 }
 
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 3rem 1rem;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+}
+
+.empty-state-emoji {
+  font-size: 2.5rem;
+}
+
 .form-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   max-width: 500px;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: var(--gradient-primary);
+  }
 
   h2 {
     margin: 0 0 0.5rem;
     font-size: 1.1rem;
+    font-weight: 700;
   }
 }
 

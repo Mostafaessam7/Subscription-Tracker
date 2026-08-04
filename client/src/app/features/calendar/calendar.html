@@ -1,7 +1,10 @@
 <div class="calendar-page">
-  <header class="page-header">
-    <h1>{{ 'calendar.title' | translate }}</h1>
-  </header>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.calendar' | translate }}</span>
+      <h1>{{ 'calendar.title' | translate }}</h1>
+    </div>
+  </div>
 
   @if (errorMessage()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
@@ -54,7 +57,12 @@
 
     @if (selectedDayKey() && selectedDayRenewals().length > 0) {
       <section class="selected-day-panel">
-        <h2>{{ selectedDayKey() }}</h2>
+        <h2>
+          <span class="panel-icon">
+            <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          {{ selectedDayKey() }}
+        </h2>
         <ul>
           @for (subscription of selectedDayRenewals(); track subscription.id) {
             <li>

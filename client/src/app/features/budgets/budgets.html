@@ -1,5 +1,10 @@
 <div class="budgets-page">
-  <h1>{{ 'nav.budgets' | translate }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.budgets' | translate }}</span>
+      <h1>{{ 'budgets.pageTitle' | translate }}</h1>
+    </div>
+  </div>
 
   @if (errorMessage()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
@@ -20,10 +25,15 @@
           } @else {
             <p class="budget-category">{{ 'budgets.allCategories' | translate }}</p>
           }
+
+          <div class="budget-progress-track">
+            <div class="budget-progress-fill" [style.width.%]="spendPercentage(budget)"></div>
+          </div>
+
           <div class="budget-progress">
             <span>{{ budget.currentSpend | number: '1.2-2' }} / {{ budget.amount | number: '1.2-2' }} {{ budget.currencyCode }}</span>
             @if (budget.hasExceededThreshold) {
-              <span class="exceeded-label">{{ 'budgets.exceeded' | translate }}</span>
+              <span class="exceeded-label">⚠ {{ 'budgets.exceeded' | translate }}</span>
             }
           </div>
           <p class="threshold-note">{{ 'budgets.threshold' | translate }}: {{ budget.alertThresholdPercentage }}%</p>
@@ -35,7 +45,10 @@
           }
         </div>
       } @empty {
-        <p>{{ 'budgets.empty' | translate }}</p>
+        <div class="empty-state">
+          <span class="empty-state-emoji">💸</span>
+          <p>{{ 'budgets.empty' | translate }}</p>
+        </div>
       }
     </div>
 
