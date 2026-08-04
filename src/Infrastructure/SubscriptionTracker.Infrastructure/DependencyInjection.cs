@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddSingleton<ITwoFactorService, TotpService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IBackgroundJobTrigger, QuartzBackgroundJobTrigger>();
 
         AddBackgroundJobs(services);
 

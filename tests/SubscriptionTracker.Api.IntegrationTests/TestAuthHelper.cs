@@ -1,5 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using SubscriptionTracker.Infrastructure.Persistence;
 
 namespace SubscriptionTracker.Api.IntegrationTests;
 
@@ -37,4 +40,28 @@ public static class TestAuthHelper
 
     public static HttpRequestMessage AuthorizedRequest(HttpMethod method, string requestUri, string accessToken) =>
         new(method, requestUri) { Headers = { Authorization = new("Bearer", accessToken) } };
+
+    /// <summary>Registers, promotes the new user to system admin directly via the DB (there's no API
+    /// path to do this - see <c>SystemAdminSeeder</c>), then logs in again so the returned session's
+    /// JWT actually carries the `system_admin` claim baked in at login time.</summary>
+    public static async Task<AuthenticatedSession> RegisterAndLoginAsSystemAdminAsync(
+        HttpClient client, ApiWebApplicationFactory factory, string? workspaceName = null)
+    {
+        var session = await RegisterAndLoginAsync(client, workspaceName);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await dbContext.Users.SingleAsync(u => u.Id == session.UserId);
+            user.GrantSystemAdmin();
+            await dbContext.SaveChangesAsync();
+        }
+
+        var loginResponse = await client.PostAsJsonAsync(
+            "/api/v1/auth/login", new { email = session.Email, password = Password });
+        loginResponse.EnsureSuccessStatusCode();
+        var login = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(JsonOptions);
+
+        return session with { AccessToken = login!.AccessToken };
+    }
 }
