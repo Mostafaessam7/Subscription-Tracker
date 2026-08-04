@@ -5,11 +5,6 @@
   max-width: 900px;
 }
 
-.page-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
 .calendar-toolbar {
   display: flex;
   align-items: center;
@@ -17,7 +12,9 @@
 }
 
 .month-label {
-  font-weight: 600;
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  font-size: 1.05rem;
   min-width: 10rem;
   text-align: center;
 }
@@ -28,55 +25,69 @@
   color: var(--color-primary);
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
   margin-inline-start: auto;
 }
 
 .calendar-grid {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
 
   th {
-    padding: 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.65rem;
+    font-size: 0.75rem;
     color: var(--color-text-muted);
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background-color: var(--color-bg-subtle);
   }
 }
 
 .calendar-day {
   width: 14.28%;
-  height: 4.5rem;
+  height: 4.75rem;
   vertical-align: top;
-  padding: 0.35rem;
+  padding: 0.5rem;
   border: 1px solid var(--color-border);
+  border-width: 0 1px 1px 0;
   cursor: default;
   position: relative;
+  transition: background-color 0.15s ease;
 
   &.outside-month {
     color: var(--color-text-muted);
-    opacity: 0.5;
+    opacity: 0.45;
   }
 
   &.today .day-number {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border-radius: 50%;
-    background-color: var(--color-primary);
-    color: var(--color-primary-contrast);
+    background-image: var(--gradient-primary);
+    color: #fff;
+    font-weight: 700;
   }
 
   &.has-renewals {
     cursor: pointer;
 
     &:hover {
-      background-color: var(--color-bg);
+      background-color: var(--color-surface-hover);
     }
   }
 
   &.selected {
+    background-color: var(--color-primary-soft);
     outline: 2px solid var(--color-primary);
     outline-offset: -2px;
   }
@@ -84,28 +95,52 @@
 
 .day-number {
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .renewal-badge {
   position: absolute;
-  bottom: 0.35rem;
-  inset-inline-end: 0.35rem;
-  background-color: var(--color-danger);
+  bottom: 0.4rem;
+  inset-inline-end: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  background-image: var(--gradient-primary);
   color: white;
   border-radius: 999px;
   font-size: 0.65rem;
-  padding: 0.1rem 0.4rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
 }
 
 .selected-day-panel {
+  position: relative;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1rem;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  animation: auth-card-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: var(--gradient-primary);
+    opacity: 0.6;
+  }
 
   h2 {
-    margin: 0 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.9rem;
     font-size: 0.95rem;
+    font-weight: 700;
   }
 
   ul {
@@ -114,16 +149,41 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   li {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 0.9rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
+  }
+}
+
+.panel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  flex-shrink: 0;
+
+  svg {
+    width: 15px;
+    height: 15px;
   }
 }
 
 .renewal-amount {
   color: var(--color-text-muted);
+  font-weight: 600;
 }

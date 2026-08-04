@@ -132,6 +132,13 @@ export class Budgets implements OnInit {
     return this.categories().find((c) => c.id === categoryId)?.name ?? null;
   }
 
+  spendPercentage(budget: Budget): number {
+    if (budget.amount <= 0) {
+      return 0;
+    }
+    return Math.min(100, (budget.currentSpend / budget.amount) * 100);
+  }
+
   get isEditing(): boolean {
     return this.editingBudgetId !== null;
   }
