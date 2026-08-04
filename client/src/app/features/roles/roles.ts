@@ -1,3 +1,4 @@
+import { UpperCasePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RoleService } from '../../core/services/role.service';
@@ -12,7 +13,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, UpperCasePipe],
   templateUrl: './roles.html',
   styleUrl: './roles.scss',
 })

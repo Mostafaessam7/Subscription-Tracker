@@ -1,5 +1,10 @@
 <div class="audit-log-page">
-  <h1>{{ 'auditLog.title' | translate }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.auditLog' | translate }}</span>
+      <h1>{{ 'auditLog.title' | translate }}</h1>
+    </div>
+  </div>
 
   @if (errorMessage()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
@@ -8,41 +13,46 @@
   @if (isLoading()) {
     <p>{{ 'common.loading' | translate }}</p>
   } @else if (page() && page()!.items.length === 0) {
-    <p>{{ 'auditLog.empty' | translate }}</p>
+    <div class="empty-state">
+      <span class="empty-state-emoji">🕊️</span>
+      <p>{{ 'auditLog.empty' | translate }}</p>
+    </div>
   } @else if (page()) {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>{{ 'auditLog.time' | translate }}</th>
-          <th>{{ 'auditLog.user' | translate }}</th>
-          <th>{{ 'auditLog.action' | translate }}</th>
-          <th>{{ 'auditLog.entity' | translate }}</th>
-          <th>{{ 'auditLog.status' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (entry of page()!.items; track entry.id) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
           <tr>
-            <td>{{ entry.occurredAtUtc | date: 'short' }}</td>
-            <td>{{ entry.userEmail ?? ('auditLog.system' | translate) }}</td>
-            <td>{{ formatAction(entry.action) }}</td>
-            <td>{{ entry.entityId ?? '—' }}</td>
-            <td>
-              <span class="status-badge" [attr.data-status]="entry.isSuccess ? 'success' : 'failed'">
-                {{ (entry.isSuccess ? 'auditLog.success' : 'auditLog.failed') | translate }}
-              </span>
-            </td>
+            <th>{{ 'auditLog.time' | translate }}</th>
+            <th>{{ 'auditLog.user' | translate }}</th>
+            <th>{{ 'auditLog.action' | translate }}</th>
+            <th>{{ 'auditLog.entity' | translate }}</th>
+            <th>{{ 'auditLog.status' | translate }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (entry of page()!.items; track entry.id) {
+            <tr>
+              <td>{{ entry.occurredAtUtc | date: 'short' }}</td>
+              <td>{{ entry.userEmail ?? ('auditLog.system' | translate) }}</td>
+              <td>{{ formatAction(entry.action) }}</td>
+              <td>{{ entry.entityId ?? '—' }}</td>
+              <td>
+                <span class="status-badge" [attr.data-status]="entry.isSuccess ? 'success' : 'failed'">
+                  {{ (entry.isSuccess ? 'auditLog.success' : 'auditLog.failed') | translate }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
     <div class="pagination">
-      <button type="button" [disabled]="!page()!.hasPreviousPage" (click)="goToPage(pageNumber - 1)">
+      <button type="button" class="secondary-button" [disabled]="!page()!.hasPreviousPage" (click)="goToPage(pageNumber - 1)">
         {{ 'common.previous' | translate }}
       </button>
-      <span>{{ page()!.pageNumber }} / {{ page()!.totalPages || 1 }}</span>
-      <button type="button" [disabled]="!page()!.hasNextPage" (click)="goToPage(pageNumber + 1)">
+      <span class="pagination-count">{{ page()!.pageNumber }} / {{ page()!.totalPages || 1 }}</span>
+      <button type="button" class="secondary-button" [disabled]="!page()!.hasNextPage" (click)="goToPage(pageNumber + 1)">
         {{ 'common.next' | translate }}
       </button>
     </div>

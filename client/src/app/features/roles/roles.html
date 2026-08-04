@@ -1,5 +1,10 @@
 <div class="roles-page">
-  <h1>{{ 'roles.title' | translate }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.roles' | translate }}</span>
+      <h1>{{ 'roles.title' | translate }}</h1>
+    </div>
+  </div>
 
   @if (errorMessage()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
@@ -12,9 +17,10 @@
       @for (role of roles(); track role.id) {
         <li class="role-row">
           <div class="role-info">
+            <span class="role-avatar">{{ role.name[0] | uppercase }}</span>
             <span class="item-name">{{ role.name }}</span>
             @if (role.isSystemRole) {
-              <span class="system-badge">{{ 'roles.systemBadge' | translate }}</span>
+              <span class="system-badge">🔒 {{ 'roles.systemBadge' | translate }}</span>
             }
             @if (role.description) {
               <span class="role-description">{{ role.description }}</span>
