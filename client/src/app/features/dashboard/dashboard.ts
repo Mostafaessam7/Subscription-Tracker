@@ -85,6 +85,14 @@ export class Dashboard implements OnInit {
 
   readonly totalSubscriptions = computed(() => this.subscriptions().length);
 
+  readonly greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 5) return { key: 'dashboard.greeting.night', emoji: '🌙' };
+    if (hour < 12) return { key: 'dashboard.greeting.morning', emoji: '☀️' };
+    if (hour < 18) return { key: 'dashboard.greeting.afternoon', emoji: '🌤️' };
+    return { key: 'dashboard.greeting.evening', emoji: '🌆' };
+  })();
+
   initials(name: string): string {
     return name
       .split(/\s+/)
