@@ -93,6 +93,8 @@
   "common.next": "Next",
   "common.yes": "Yes",
   "common.no": "No",
+  "subscriptions.pageTitle": "Your subscriptions",
+  "subscriptions.sortBy": "Sort by",
   "subscriptions.create": "Add subscription",
   "subscriptions.createTitle": "Add a subscription",
   "subscriptions.editTitle": "Edit subscription",

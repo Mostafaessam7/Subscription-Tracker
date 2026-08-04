@@ -93,6 +93,8 @@
   "common.next": "التالي",
   "common.yes": "نعم",
   "common.no": "لا",
+  "subscriptions.pageTitle": "اشتراكاتك",
+  "subscriptions.sortBy": "ترتيب حسب",
   "subscriptions.create": "إضافة اشتراك",
   "subscriptions.createTitle": "إضافة اشتراك جديد",
   "subscriptions.editTitle": "تعديل الاشتراك",

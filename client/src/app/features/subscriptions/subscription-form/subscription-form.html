@@ -1,5 +1,8 @@
 <div class="subscription-form-page">
-  <a routerLink="/subscriptions" class="back-link">{{ 'subscriptions.backToList' | translate }}</a>
+  <a routerLink="/subscriptions" class="back-link">
+    <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 5 7 10l5.5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {{ 'subscriptions.backToList' | translate }}
+  </a>
 
   @if (isLoading()) {
     <p>{{ 'common.loading' | translate }}</p>
@@ -106,10 +109,14 @@
           <span>{{ 'subscriptions.tags' | translate }}</span>
           <div class="tag-checklist">
             @for (tag of tags(); track tag.id) {
-              <label class="tag-checkbox">
-                <input type="checkbox" [checked]="isTagSelected(tag.id)" (change)="toggleTag(tag.id)" />
-                <span>{{ tag.name }}</span>
-              </label>
+              <button
+                type="button"
+                class="tag-toggle"
+                [class.selected]="isTagSelected(tag.id)"
+                (click)="toggleTag(tag.id)"
+              >
+                {{ tag.name }}
+              </button>
             }
           </div>
         </div>

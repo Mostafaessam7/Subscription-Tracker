@@ -1,19 +1,27 @@
 <div class="subscriptions-page">
-  <header class="page-header">
-    <h1>{{ 'nav.subscriptions' | translate }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.subscriptions' | translate }}</span>
+      <h1>{{ 'subscriptions.pageTitle' | translate }}</h1>
+    </div>
     @if (permissions.hasPermission(Permissions.Subscriptions.Create)) {
-      <a routerLink="/subscriptions/new" class="primary-button">{{ 'subscriptions.create' | translate }}</a>
+      <a routerLink="/subscriptions/new" class="primary-button">
+        <span class="button-icon">+</span>
+        {{ 'subscriptions.create' | translate }}
+      </a>
     }
-  </header>
+  </div>
 
   <div class="filters">
-    <input
-      type="search"
-      class="search-input"
-      [(ngModel)]="searchTerm"
-      (keyup.enter)="applyFilters()"
-      [placeholder]="'subscriptions.searchPlaceholder' | translate"
-    />
+    <div class="search-field">
+      <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6"/><path d="m17 17-4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input
+        type="search"
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="applyFilters()"
+        [placeholder]="'subscriptions.searchPlaceholder' | translate"
+      />
+    </div>
 
     <select [(ngModel)]="status" (ngModelChange)="applyFilters()">
       <option [ngValue]="''">{{ 'subscriptions.allStatuses' | translate }}</option>
@@ -34,46 +42,63 @@
   @if (isLoading()) {
     <p>{{ 'common.loading' | translate }}</p>
   } @else if (page() && page()!.items.length === 0) {
-    <p>{{ 'subscriptions.empty' | translate }}</p>
+    <div class="empty-state">
+      <span class="empty-state-emoji">📭</span>
+      <p>{{ 'subscriptions.empty' | translate }}</p>
+      @if (permissions.hasPermission(Permissions.Subscriptions.Create)) {
+        <a routerLink="/subscriptions/new" class="primary-button">{{ 'subscriptions.create' | translate }}</a>
+      }
+    </div>
   } @else if (page()) {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th (click)="sort('name')" class="sortable">{{ 'subscriptions.name' | translate }}</th>
-          <th (click)="sort('amount')" class="sortable">{{ 'subscriptions.amount' | translate }}</th>
-          <th (click)="sort('nextrenewaldate')" class="sortable">{{ 'subscriptions.nextRenewal' | translate }}</th>
-          <th>{{ 'subscriptions.status.label' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (subscription of page()!.items; track subscription.id) {
-          <tr
-            (click)="openDetail(subscription.id)"
-            (keydown.enter)="openDetail(subscription.id)"
-            (keydown.space)="openDetail(subscription.id); $event.preventDefault()"
-            tabindex="0"
-            role="button"
-            class="clickable-row"
-          >
-            <td>{{ subscription.name }}</td>
-            <td>{{ subscription.amount }} {{ subscription.currencyCode }}</td>
-            <td>{{ subscription.nextRenewalDate ?? '—' }}</td>
-            <td>
-              <span class="status-badge" [attr.data-status]="subscription.status">
-                {{ 'subscriptions.status.' + subscription.status | translate }}
-              </span>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <div class="sort-bar">
+      <span>{{ 'subscriptions.sortBy' | translate }}</span>
+      <button type="button" [class.active]="sortBy === 'name'" (click)="sort('name')">
+        {{ 'subscriptions.name' | translate }} {{ sortBy === 'name' ? (sortDescending ? '↓' : '↑') : '' }}
+      </button>
+      <button type="button" [class.active]="sortBy === 'amount'" (click)="sort('amount')">
+        {{ 'subscriptions.amount' | translate }} {{ sortBy === 'amount' ? (sortDescending ? '↓' : '↑') : '' }}
+      </button>
+      <button type="button" [class.active]="sortBy === 'nextrenewaldate'" (click)="sort('nextrenewaldate')">
+        {{ 'subscriptions.nextRenewal' | translate }} {{ sortBy === 'nextrenewaldate' ? (sortDescending ? '↓' : '↑') : '' }}
+      </button>
+    </div>
+
+    <div class="subscription-grid">
+      @for (subscription of page()!.items; track subscription.id) {
+        <a
+          class="subscription-card"
+          [routerLink]="['/subscriptions', subscription.id]"
+          [attr.data-status]="subscription.status"
+        >
+          <div class="subscription-card-top">
+            <span class="subscription-avatar">{{ initials(subscription.name) }}</span>
+            <span class="status-badge" [attr.data-status]="subscription.status">
+              {{ 'subscriptions.status.' + subscription.status | translate }}
+            </span>
+          </div>
+          <span class="subscription-name">{{ subscription.name }}</span>
+          <span class="subscription-provider">{{ subscription.provider }}</span>
+          <div class="subscription-card-bottom">
+            <span class="subscription-amount">{{ subscription.amount }} {{ subscription.currencyCode }}</span>
+            <span class="subscription-renewal">
+              @if (subscription.nextRenewalDate) {
+                <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                {{ subscription.nextRenewalDate }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+        </a>
+      }
+    </div>
 
     <div class="pagination">
-      <button type="button" [disabled]="!page()!.hasPreviousPage" (click)="goToPage(pageNumber - 1)">
+      <button type="button" class="secondary-button" [disabled]="!page()!.hasPreviousPage" (click)="goToPage(pageNumber - 1)">
         {{ 'common.previous' | translate }}
       </button>
-      <span>{{ page()!.pageNumber }} / {{ page()!.totalPages || 1 }}</span>
-      <button type="button" [disabled]="!page()!.hasNextPage" (click)="goToPage(pageNumber + 1)">
+      <span class="pagination-count">{{ page()!.pageNumber }} / {{ page()!.totalPages || 1 }}</span>
+      <button type="button" class="secondary-button" [disabled]="!page()!.hasNextPage" (click)="goToPage(pageNumber + 1)">
         {{ 'common.next' | translate }}
       </button>
     </div>
