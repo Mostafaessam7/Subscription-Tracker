@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
@@ -21,7 +21,6 @@ import {
 })
 export class SubscriptionList {
   private readonly subscriptionService = inject(SubscriptionService);
-  private readonly router = inject(Router);
   protected readonly permissions = inject(PermissionsService);
   protected readonly Permissions = Permissions;
 
@@ -94,7 +93,12 @@ export class SubscriptionList {
     this.load();
   }
 
-  openDetail(id: string): void {
-    void this.router.navigate(['/subscriptions', id]);
+  initials(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]!.toUpperCase())
+      .join('');
   }
 }

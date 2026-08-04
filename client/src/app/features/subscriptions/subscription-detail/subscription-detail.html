@@ -1,19 +1,26 @@
 <div class="subscription-detail-page">
-  <a routerLink="/subscriptions" class="back-link">{{ 'subscriptions.backToList' | translate }}</a>
+  <a routerLink="/subscriptions" class="back-link">
+    <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 5 7 10l5.5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {{ 'subscriptions.backToList' | translate }}
+  </a>
 
   @if (isLoading()) {
     <p>{{ 'common.loading' | translate }}</p>
   } @else if (errorMessage() && !subscription()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
   } @else if (subscription()) {
-    <header class="page-header">
-      <div>
+    <header class="hero-header">
+      <span class="hero-avatar">{{ initials(subscription()!.name) }}</span>
+      <div class="hero-info">
         <h1>{{ subscription()!.name }}</h1>
         <p class="provider">{{ subscription()!.provider }}</p>
       </div>
-      <span class="status-badge" [attr.data-status]="subscription()!.status">
-        {{ 'subscriptions.status.' + subscription()!.status | translate }}
-      </span>
+      <div class="hero-side">
+        <span class="hero-amount">{{ subscription()!.amount }} {{ subscription()!.currencyCode }}</span>
+        <span class="status-badge" [attr.data-status]="subscription()!.status">
+          {{ 'subscriptions.status.' + subscription()!.status | translate }}
+        </span>
+      </div>
     </header>
 
     @if (errorMessage()) {
@@ -21,10 +28,6 @@
     }
 
     <div class="detail-grid">
-      <div class="detail-field">
-        <span class="label">{{ 'subscriptions.amount' | translate }}</span>
-        <span>{{ subscription()!.amount }} {{ subscription()!.currencyCode }}</span>
-      </div>
       <div class="detail-field">
         <span class="label">{{ 'subscriptions.startDate' | translate }}</span>
         <span>{{ subscription()!.startDate }}</span>
@@ -45,16 +48,20 @@
         <span class="label">{{ 'subscriptions.paymentMethod' | translate }}</span>
         <span>{{ paymentMethodLabel() ?? ('subscriptions.noPaymentMethod' | translate) }}</span>
       </div>
-      @if (tagNames().length > 0) {
-        <div class="detail-field full-width">
-          <span class="label">{{ 'subscriptions.tags' | translate }}</span>
-          <span>{{ tagNames().join(', ') }}</span>
-        </div>
-      }
       @if (subscription()!.websiteUrl) {
         <div class="detail-field">
           <span class="label">{{ 'subscriptions.website' | translate }}</span>
           <a [href]="subscription()!.websiteUrl" target="_blank" rel="noopener">{{ subscription()!.websiteUrl }}</a>
+        </div>
+      }
+      @if (tagNames().length > 0) {
+        <div class="detail-field full-width">
+          <span class="label">{{ 'subscriptions.tags' | translate }}</span>
+          <span class="tag-list">
+            @for (tag of tagNames(); track tag) {
+              <span class="tag-chip">{{ tag }}</span>
+            }
+          </span>
         </div>
       }
       @if (subscription()!.notes) {
@@ -66,7 +73,12 @@
     </div>
 
     <section class="attachments-section">
-      <h2>{{ 'subscriptions.attachments' | translate }}</h2>
+      <h2>
+        <span class="panel-icon">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M14 3H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7l-4-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        {{ 'subscriptions.attachments' | translate }}
+      </h2>
       <ul class="attachment-list">
         @for (attachment of subscription()!.attachments; track attachment.id) {
           <li>
