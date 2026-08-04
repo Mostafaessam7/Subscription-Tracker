@@ -1,24 +1,52 @@
 .workspace-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   max-width: 800px;
-
-  h1 {
-    margin: 0;
-    font-size: 1.4rem;
-  }
 }
 
 .panel {
+  position: relative;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: var(--gradient-primary);
+    opacity: 0.6;
+  }
 
   h2 {
-    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 1.1rem;
     font-size: 1.05rem;
+    font-weight: 700;
+  }
+}
+
+.panel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  flex-shrink: 0;
+
+  svg {
+    width: 15px;
+    height: 15px;
   }
 }
 
@@ -46,7 +74,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.15rem;
 
   li {
     display: flex;
@@ -54,7 +82,27 @@
     gap: 0.6rem;
     font-size: 0.9rem;
     flex-wrap: wrap;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
   }
+}
+
+.member-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-image: var(--gradient-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.72rem;
+  flex-shrink: 0;
 }
 
 .member-name {
@@ -68,10 +116,12 @@
 }
 
 .status-badge {
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  background-color: var(--color-border);
-  font-size: 0.75rem;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .link-button {
@@ -81,6 +131,7 @@
   color: var(--color-primary);
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
 
   &.danger {
     color: var(--color-danger);
@@ -90,6 +141,7 @@
 .invite-success {
   color: var(--color-success);
   font-size: 0.85rem;
+  font-weight: 600;
   margin: 0;
   flex-basis: 100%;
 }

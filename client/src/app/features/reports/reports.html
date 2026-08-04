@@ -1,12 +1,22 @@
 <div class="reports-page">
-  <h1>{{ 'nav.reports' | translate }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">{{ 'nav.reports' | translate }}</span>
+      <h1>{{ 'reports.pageTitle' | translate }}</h1>
+    </div>
+  </div>
 
   @if (errorMessage()) {
     <p class="form-error" role="alert">{{ errorMessage()! | translate }}</p>
   }
 
   <section class="panel">
-    <h2>{{ 'reports.filters' | translate }}</h2>
+    <h2>
+      <span class="panel-icon">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M4 5h12M6 10h8M8 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </span>
+      {{ 'reports.filters' | translate }}
+    </h2>
     <div class="filters">
       <input
         type="search"
@@ -33,17 +43,25 @@
 
   @if (permissions.hasPermission(Permissions.Reports.Export)) {
     <section class="panel">
-      <h2>{{ 'reports.export' | translate }}</h2>
+      <h2>
+        <span class="panel-icon">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M10 3v10m0 0-3.5-3.5M10 13l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        {{ 'reports.export' | translate }}
+      </h2>
       <p class="hint">{{ 'reports.exportHint' | translate }}</p>
       <div class="export-actions">
-        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportCsv()">
-          {{ 'reports.exportCsv' | translate }}
+        <button type="button" class="export-card" [disabled]="isExporting()" (click)="exportCsv()">
+          <span class="export-format">CSV</span>
+          <span class="export-label">{{ 'reports.exportCsv' | translate }}</span>
         </button>
-        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportExcel()">
-          {{ 'reports.exportExcel' | translate }}
+        <button type="button" class="export-card" [disabled]="isExporting()" (click)="exportExcel()">
+          <span class="export-format">XLSX</span>
+          <span class="export-label">{{ 'reports.exportExcel' | translate }}</span>
         </button>
-        <button type="button" class="primary-button" [disabled]="isExporting()" (click)="exportPdf()">
-          {{ 'reports.exportPdf' | translate }}
+        <button type="button" class="export-card" [disabled]="isExporting()" (click)="exportPdf()">
+          <span class="export-format">PDF</span>
+          <span class="export-label">{{ 'reports.exportPdf' | translate }}</span>
         </button>
       </div>
     </section>
