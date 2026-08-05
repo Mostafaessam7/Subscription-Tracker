@@ -1,6 +1,6 @@
 # Subscription Tracker — What's Left
 
-_Last updated: 2026-08-04 (session 2)_
+_Last updated: 2026-08-05 (session 3)_
 
 This file is a standalone status snapshot for picking up work in a **new chat**. If you're
 starting fresh, read this file first — it tells you what's done, what's genuinely missing, and
@@ -40,12 +40,22 @@ what to check before doing more design work.
    `mostafa@subtracker.local` in `appsettings.Development.json`. Restart the API for it to take
    effect if you ever change it (or just log out/in — refresh-token exchanges re-derive the JWT's
    claims from the DB, so a session already open picks up the promotion without a full re-login).
-4. **Frontend test coverage — still thin.** Not addressed this session (backend test coverage was
-   extended instead — see below). Most feature components (subscriptions, budgets, settings,
-   workspace, security, roles, admin, reports) still have zero `.spec.ts` files.
-5. **Backend test coverage — extended this session.** 188/188 passing (up from 182): added 6
-   integration tests for the new job-trigger endpoint (`AdminControllerTests.cs` — forbidden for
-   regular users, 204 for each known job name, 404 for an unknown one).
+4. **Frontend test coverage — extended this session.** Added `dashboard.spec.ts` (9 tests: KPI
+   counts, monthly-spend normalization across every `BillingFrequency` incl. the custom-interval
+   and lifetime edge cases, the 30-day upcoming-renewals window/sort/cap, frequency grouping,
+   `initials()`, and the time-of-day greeting boundaries via `vi.setSystemTime`), `budgets.spec.ts`
+   (10 tests: `spendPercentage()` including the zero-amount divide-by-zero guard and the >100%
+   clamp, `categoryName()` lookup/miss/null-category cases, `isEditing` state), and
+   `subscription-list.spec.ts` (9 tests: initial load params, filter/search reset-to-page-1,
+   null-vs-empty-string search/status handling, sort-toggle logic, pagination, the generic-error
+   path, `initials()`). All component tests use `TestBed.runInInjectionContext(() => new X())` +
+   `useValue` service stubs instead of full `TestBed.createComponent()` rendering, so they don't
+   need `TranslatePipe`/`HttpClient` wired up — deliberately cheap, logic-only unit tests. 54/54
+   frontend tests passing (up from 26). Settings, calendar, reports, workspace, security, roles,
+   admin, and audit-log still have zero `.spec.ts` files — see "Where to pick up" below.
+5. **Backend test coverage — extended last session.** 188/188 passing: added 6 integration tests
+   for the job-trigger endpoint (`AdminControllerTests.cs` — forbidden for regular users, 204 for
+   each known job name, 404 for an unknown one).
 
 ## Design — what's done (across two sessions)
 
@@ -91,10 +101,12 @@ You asked for these three to be checked. Results:
 ## Where to pick up
 
 - **Docker**: needs a human at the Docker Desktop window — see item 1 above.
-- **Frontend test coverage**: the single biggest remaining gap. Start with the pages that have the
-  most non-trivial logic (subscription-list filtering/sorting, budgets spend-percentage
-  calculation, dashboard greeting/urgency-badge logic) rather than trivial template-only
-  components.
+- **Frontend test coverage**: dashboard/budgets/subscription-list are covered now. Next highest-value
+  targets: `subscription-form.ts` (tag toggling, submit payload shaping), `settings.ts` (three
+  near-identical catalog CRUD forms — categories/tags/payment methods), and `workspace.ts` (invite
+  form, role changes, `initials()`). Reuse the `TestBed.runInInjectionContext(() => new X())` +
+  `useValue` stub pattern from the three specs added this session rather than full component
+  rendering — it's fast and avoids needing `TranslatePipe`/`HttpClient` test scaffolding.
 - **True mobile visual pass**: if a Browser pane / device with a real resizable viewport becomes
   available, do one pass at 375px width across all pages — the tooling limitation above means this
   genuinely hasn't happened yet, only the one bug it could statically/structurally catch.
