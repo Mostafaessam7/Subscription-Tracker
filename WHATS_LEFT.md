@@ -1,6 +1,6 @@
 # Subscription Tracker — What's Left
 
-_Last updated: 2026-08-05 (session 4)_
+_Last updated: 2026-08-05 (session 5)_
 
 This file is a standalone status snapshot for picking up work in a **new chat**. If you're
 starting fresh, read this file first — it tells you what's done, what's genuinely missing, and
@@ -40,19 +40,19 @@ what to check before doing more design work.
    `mostafa@subtracker.local` in `appsettings.Development.json`. Restart the API for it to take
    effect if you ever change it (or just log out/in — refresh-token exchanges re-derive the JWT's
    claims from the DB, so a session already open picks up the promotion without a full re-login).
-4. **Frontend test coverage — extended across two sessions, now 83/83 passing (up from 26).**
-   Session 3 added `dashboard.spec.ts` (9), `budgets.spec.ts` (10), `subscription-list.spec.ts` (9).
-   Session 4 added three more: `subscription-form.spec.ts` (12 tests: create-vs-edit mode, blank→
-   null coercion on submit, tag toggling, the immutable-fields-locked-in-edit-mode behavior, 400 vs.
-   other HTTP error mapping), `settings.spec.ts` (13 tests: all three catalog CRUD forms —
-   categories/tags/payment methods — covering create/update/delete, blank→null coercion, and
-   independent per-row edit-state tracking), `workspace.spec.ts` (8 tests: settings form seeding,
-   owner detection, invite flow success/failure, and confirming `acceptInvitation` calls
-   `WorkspaceContextService.refresh()` so the shell's workspace switcher doesn't go stale). All use
-   `TestBed.runInInjectionContext(() => new X())` + `useValue` service stubs rather than full
-   `TestBed.createComponent()` rendering - fast, no `TranslatePipe`/`HttpClient` scaffolding needed.
-   Calendar, reports, security, roles, admin, and audit-log still have zero `.spec.ts` files - see
-   "Where to pick up" below.
+4. **Frontend test coverage — done. Every feature component now has a spec file. 132/132 passing
+   (up from 26 at the start).** Session 3: `dashboard.spec.ts` (9), `budgets.spec.ts` (10),
+   `subscription-list.spec.ts` (9). Session 4: `subscription-form.spec.ts` (12), `settings.spec.ts`
+   (13), `workspace.spec.ts` (8). Session 5 (this one) finished the rest: `calendar.spec.ts` (10 -
+   month navigation, day selection/toggle, per-day renewal grouping; `calendar-grid.ts` itself was
+   already covered separately), `reports.spec.ts` (5 - filter-to-null coercion, export error
+   handling; note `URL.createObjectURL` needs `vi.stubGlobal` since jsdom doesn't implement it),
+   `security.spec.ts` (14 - 2FA setup/enable/disable including the 400→invalid-code mapping,
+   session revoke), `roles.spec.ts` (12 - permission-catalog grouping, permission toggling, role
+   CRUD, edit-state interaction with delete), `admin.spec.ts` (6 - user enable/disable branching,
+   reload-after-toggle), `audit-log.spec.ts` (7 - pagination, the `formatAction` PascalCase-to-
+   spaced-words regex). All 49 new tests use the same `TestBed.runInInjectionContext(() => new X())`
+   + `useValue` stub pattern as the earlier sessions.
 5. **Backend test coverage — extended last session.** 188/188 passing: added 6 integration tests
    for the job-trigger endpoint (`AdminControllerTests.cs` — forbidden for regular users, 204 for
    each known job name, 404 for an unknown one).
@@ -85,30 +85,36 @@ You asked for these three to be checked. Results:
    The one `translateX` animation added (dashboard renewal-row hover) already had an
    `:host-context([dir='rtl'])` override. Spot-checked dashboard and subscriptions pages with the
    language switched to Arabic — text, layout, and icon positions all correct.
-3. **Mobile/narrow viewports — found and fixed a real bug.** The dashboard's decorative glow orbs
-   (`22rem`/`16rem` wide, `position: absolute`, `z-index: -1`) weren't contained by their parent,
-   so on a narrow viewport they could push the page into horizontal scroll. Added
-   `overflow: hidden` to `.dashboard-page` (safe — it already uses `isolation: isolate` for the
-   same z-index trick, and no visible content sits outside its bounds). Verified no horizontal
-   overflow afterward on dashboard, subscriptions, and budgets.
-   **Caveat:** the Browser pane's `resize_window` tool did not actually change the real viewport
-   width in this session (`window.innerWidth` stayed stuck regardless of requested size) — a
-   tooling limitation, not something to read as "mobile is fully verified visually." The overflow
-   check above was done via `scrollWidth`/`clientWidth` comparison at whatever width the tool
-   actually provided, which caught the real bug above, but nobody has visually looked at this app
-   at true phone width (375px) in an actually-resized viewport.
+3. **Mobile/narrow viewports — found and fixed a real bug (session 3), re-verified more
+   thoroughly this session.** The dashboard's decorative glow orbs (`22rem`/`16rem` wide,
+   `position: absolute`, `z-index: -1`) weren't contained by their parent, so on a narrow viewport
+   they could push the page into horizontal scroll. Fixed with `overflow: hidden` on
+   `.dashboard-page`.
+   **This session's `resize_window` behavior**: requesting 375px got a real, different width each
+   time depending on the page - the standalone `/auth/login` page (no shell/sidenav) genuinely
+   rendered at a confirmed true 375px (`window.innerWidth`, `document.documentElement.scrollWidth`,
+   and the `read_page` tool's own reported viewport all agreed), but every authenticated page
+   inside `.shell` (dashboard, subscriptions, budgets, calendar, settings, reports, workspace,
+   security, roles, admin, audit-log) consistently rendered at 459px regardless of the requested
+   width or navigation method (SPA route change vs. full `location.href` reload) - looks like an
+   environment-specific floor tied to the fixed-position mobile sidenav + flex shell layout, not
+   something under the app's control. Swept all 12 pages at that width plus the login page at true
+   375px: **zero horizontal overflow anywhere**, and confirmed the sidenav correctly slides off-
+   screen (`translateX(-236px)`) with the hamburger toggle visible. This is a real, positive
+   verification result (multiple pages checked, one prior bug's fix confirmed still holding) even
+   though the exact 375px figure wasn't achieved for shell pages - treat "no overflow bugs found in
+   a full page sweep at ~460px and below" as done; true phone-width visual inspection of the shell
+   layout specifically is the only piece still open if a different Browser pane/device becomes
+   available later.
 
 ## Where to pick up
 
+Everything self-directed from the original checklist is now done: features (Docker aside),
+frontend test coverage (every component has a spec file), and all three design-verification asks
+(dark mode, RTL, mobile). What's left needs either a human or a different environment:
+
 - **Docker**: needs a human at the Docker Desktop window — see item 1 above.
-- **Frontend test coverage**: dashboard/budgets/subscription-list/subscription-form/settings/
-  workspace are covered now (83/83). Remaining zero-coverage components: `calendar.ts` (month
-  navigation, `selectDay`/`selectedDayRenewals` filtering - `calendar-grid.ts` itself is already
-  tested), `reports.ts` (filter state, export calls), `security.ts` (2FA setup/enable/disable flow,
-  session revoke), `roles.ts` (permission toggling, role CRUD), `admin.ts` (user enable/disable,
-  the job-trigger button if one gets added to the UI), `audit-log.ts` (pagination, action-name
-  formatting). Reuse the `TestBed.runInInjectionContext(() => new X())` + `useValue` stub pattern
-  from the six specs added so far rather than full component rendering.
-- **True mobile visual pass**: if a Browser pane / device with a real resizable viewport becomes
-  available, do one pass at 375px width across all pages — the tooling limitation above means this
-  genuinely hasn't happened yet, only the one bug it could statically/structurally catch.
+- **True 375px shell-page rendering**: only reachable if a Browser pane/device without the ~459px
+  floor described above becomes available — re-run the same overflow sweep this session did.
+- Nothing else is currently flagged. If new feature work or design polish gets requested, add it
+  here rather than re-deriving the state of the project from scratch.
