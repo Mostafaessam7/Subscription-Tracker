@@ -1,6 +1,6 @@
 # Subscription Tracker — What's Left
 
-_Last updated: 2026-08-05 (session 3)_
+_Last updated: 2026-08-05 (session 4)_
 
 This file is a standalone status snapshot for picking up work in a **new chat**. If you're
 starting fresh, read this file first — it tells you what's done, what's genuinely missing, and
@@ -40,19 +40,19 @@ what to check before doing more design work.
    `mostafa@subtracker.local` in `appsettings.Development.json`. Restart the API for it to take
    effect if you ever change it (or just log out/in — refresh-token exchanges re-derive the JWT's
    claims from the DB, so a session already open picks up the promotion without a full re-login).
-4. **Frontend test coverage — extended this session.** Added `dashboard.spec.ts` (9 tests: KPI
-   counts, monthly-spend normalization across every `BillingFrequency` incl. the custom-interval
-   and lifetime edge cases, the 30-day upcoming-renewals window/sort/cap, frequency grouping,
-   `initials()`, and the time-of-day greeting boundaries via `vi.setSystemTime`), `budgets.spec.ts`
-   (10 tests: `spendPercentage()` including the zero-amount divide-by-zero guard and the >100%
-   clamp, `categoryName()` lookup/miss/null-category cases, `isEditing` state), and
-   `subscription-list.spec.ts` (9 tests: initial load params, filter/search reset-to-page-1,
-   null-vs-empty-string search/status handling, sort-toggle logic, pagination, the generic-error
-   path, `initials()`). All component tests use `TestBed.runInInjectionContext(() => new X())` +
-   `useValue` service stubs instead of full `TestBed.createComponent()` rendering, so they don't
-   need `TranslatePipe`/`HttpClient` wired up — deliberately cheap, logic-only unit tests. 54/54
-   frontend tests passing (up from 26). Settings, calendar, reports, workspace, security, roles,
-   admin, and audit-log still have zero `.spec.ts` files — see "Where to pick up" below.
+4. **Frontend test coverage — extended across two sessions, now 83/83 passing (up from 26).**
+   Session 3 added `dashboard.spec.ts` (9), `budgets.spec.ts` (10), `subscription-list.spec.ts` (9).
+   Session 4 added three more: `subscription-form.spec.ts` (12 tests: create-vs-edit mode, blank→
+   null coercion on submit, tag toggling, the immutable-fields-locked-in-edit-mode behavior, 400 vs.
+   other HTTP error mapping), `settings.spec.ts` (13 tests: all three catalog CRUD forms —
+   categories/tags/payment methods — covering create/update/delete, blank→null coercion, and
+   independent per-row edit-state tracking), `workspace.spec.ts` (8 tests: settings form seeding,
+   owner detection, invite flow success/failure, and confirming `acceptInvitation` calls
+   `WorkspaceContextService.refresh()` so the shell's workspace switcher doesn't go stale). All use
+   `TestBed.runInInjectionContext(() => new X())` + `useValue` service stubs rather than full
+   `TestBed.createComponent()` rendering - fast, no `TranslatePipe`/`HttpClient` scaffolding needed.
+   Calendar, reports, security, roles, admin, and audit-log still have zero `.spec.ts` files - see
+   "Where to pick up" below.
 5. **Backend test coverage — extended last session.** 188/188 passing: added 6 integration tests
    for the job-trigger endpoint (`AdminControllerTests.cs` — forbidden for regular users, 204 for
    each known job name, 404 for an unknown one).
@@ -101,12 +101,14 @@ You asked for these three to be checked. Results:
 ## Where to pick up
 
 - **Docker**: needs a human at the Docker Desktop window — see item 1 above.
-- **Frontend test coverage**: dashboard/budgets/subscription-list are covered now. Next highest-value
-  targets: `subscription-form.ts` (tag toggling, submit payload shaping), `settings.ts` (three
-  near-identical catalog CRUD forms — categories/tags/payment methods), and `workspace.ts` (invite
-  form, role changes, `initials()`). Reuse the `TestBed.runInInjectionContext(() => new X())` +
-  `useValue` stub pattern from the three specs added this session rather than full component
-  rendering — it's fast and avoids needing `TranslatePipe`/`HttpClient` test scaffolding.
+- **Frontend test coverage**: dashboard/budgets/subscription-list/subscription-form/settings/
+  workspace are covered now (83/83). Remaining zero-coverage components: `calendar.ts` (month
+  navigation, `selectDay`/`selectedDayRenewals` filtering - `calendar-grid.ts` itself is already
+  tested), `reports.ts` (filter state, export calls), `security.ts` (2FA setup/enable/disable flow,
+  session revoke), `roles.ts` (permission toggling, role CRUD), `admin.ts` (user enable/disable,
+  the job-trigger button if one gets added to the UI), `audit-log.ts` (pagination, action-name
+  formatting). Reuse the `TestBed.runInInjectionContext(() => new X())` + `useValue` stub pattern
+  from the six specs added so far rather than full component rendering.
 - **True mobile visual pass**: if a Browser pane / device with a real resizable viewport becomes
   available, do one pass at 375px width across all pages — the tooling limitation above means this
   genuinely hasn't happened yet, only the one bug it could statically/structurally catch.
