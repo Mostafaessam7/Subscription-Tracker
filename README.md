@@ -4,19 +4,30 @@ An enterprise-grade subscription management SaaS: track recurring subscriptions,
 overspend alerts, manage a shared workspace with teammates, and export reports — built with a .NET 10 Web API
 (Clean Architecture / DDD / CQRS) backend and an Angular 22 frontend.
 
-> Looking for deep architectural detail, known gotchas, or a log of what's been built and why? See
-> [HANDOVER.md](HANDOVER.md) — it's the working document for anyone (human or AI) picking up development on this
-> codebase. This README is a lighter-weight orientation for a first-time human contributor.
+**GitHub**: [github.com/Mostafaessam7/Subscription-Tracker](https://github.com/Mostafaessam7/Subscription-Tracker)
+
+> Looking for deep architectural detail, known gotchas, the full feature-by-feature build history, or what's
+> genuinely still left to do? See [HANDOVER.md](HANDOVER.md) — it's the working document for anyone (human or AI)
+> picking up development on this codebase. This README is a lighter-weight orientation for a first-time human
+> contributor.
 
 ## Features
 
 - **Subscriptions** — full CRUD, pause/resume/cancel, categories/tags/payment methods, file attachments, renewal
-  reminders and auto-renewal via scheduled background jobs.
-- **Budgets** — per-category or workspace-wide spending limits with live spend tracking and overspend email alerts.
-- **Workspaces** — invite teammates, assign roles (Owner / Member / Viewer), manage members.
-- **Security** — JWT auth with refresh-token rotation, permission-based authorization, two-factor authentication
-  (TOTP), session management (view/revoke active logins), account lockout after repeated failed logins.
-- **Reports** — export your subscription list as CSV or Excel.
+  reminders and auto-renewal via scheduled background jobs, a calendar view of upcoming renewals.
+- **Budgets** — per-category or workspace-wide spending limits with live spend tracking and overspend email +
+  in-app alerts.
+- **Workspaces** — invite teammates (including people who don't have an account yet), assign roles (seeded Owner
+  / Member / Viewer, or build your own custom role with a hand-picked permission set), switch between workspaces
+  you belong to, manage members.
+- **Security** — JWT auth with refresh-token rotation, permission-based authorization (enforced both server-side
+  and in the UI), two-factor authentication (TOTP), session management (view/revoke active logins), account
+  lockout after repeated failed logins, per-endpoint rate limiting on sensitive auth routes, EF Core global query
+  filters for defense-in-depth tenant isolation.
+- **Admin & audit** — a cross-tenant system-admin console (list every workspace/user, enable/disable accounts,
+  health counts, trigger background jobs on demand) and a full audit log of every command run in the system.
+- **Notifications** — in-app notification bell with live SignalR push, alongside the existing email notifications.
+- **Reports** — export your subscription list as CSV, Excel, or PDF.
 - **i18n** — English and Arabic (with right-to-left layout), dark/light theme.
 
 ## Tech stack
@@ -73,9 +84,8 @@ Copy `.env.example` to `.env`, fill in real values, then run:
 docker compose up --build
 ```
 
-**Note:** these Docker files have not yet been build-verified in any development session on this project (no
-Docker daemon has been available in any of them) — see HANDOVER.md for details. Expect to fix minor issues on
-first run.
+**Note:** these Docker files have not yet been build-verified end-to-end — see [HANDOVER.md](HANDOVER.md#7-known-non-blocking-gaps)
+for the current status. Expect to fix minor issues on first run.
 
 ## Running tests
 
@@ -132,6 +142,14 @@ health counts) requires the `system_admin` JWT claim, which nothing in the produ
 Instead, set `SystemAdmin__BootstrapEmail` (or `SystemAdmin:BootstrapEmail` in `appsettings.*.json`) to the email
 of an already-registered user; on the next API startup, `SystemAdminSeeder` promotes that account idempotently.
 Unset the config key (or change it) once you no longer want new accounts auto-promoted on restart.
+
+## What's next
+
+The project is feature-complete against its original scope plus a full enterprise-readiness audit — see
+[HANDOVER.md §6-8](HANDOVER.md#6-milestone-status--feature-complete-only-docker-verification-is-a-genuine-blocker)
+for the accurate, up-to-date list of what's genuinely still open (Docker build verification is the only real
+blocker) and a few unscoped ideas for further improvement (CI pipeline, multi-currency budgets, blob storage for
+attachments, a LICENSE file).
 
 ## License
 

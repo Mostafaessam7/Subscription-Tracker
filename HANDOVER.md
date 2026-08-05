@@ -2,9 +2,13 @@
 
 **Read this file first if you are a new session continuing this project.** It contains everything needed to resume without re-deriving context.
 
-Last updated: 2026-07-28. All 10 original milestones plus every previously-flagged stretch item (Category/Tag/PaymentMethod CRUD, Budget CRUD, Workspace management, session management, 2FA, attachment upload, reports export, system role seeding) are now implemented, tested, and browser-verified. See §6 for the full status and the short list of what's genuinely still open (Docker verification, production secrets, custom role builder).
+**GitHub**: [github.com/Mostafaessam7/Subscription-Tracker](https://github.com/Mostafaessam7/Subscription-Tracker)
+
+Last updated: 2026-08-05. The project is feature-complete against every originally-scoped milestone, every stretch item flagged along the way, and a full enterprise-readiness audit performed on 2026-07-29 and closed out on 2026-08-03 (workspace switcher, tenant isolation, custom role builder, system admin, in-app notifications, renewal calendar, PDF export, invite-by-email for unregistered users, expanded test coverage, OpenTelemetry). See §2 for what's implemented and §6/§7 for the short, accurate list of what's genuinely still open (Docker verification is the only real blocker, and it's an environment problem, not a code problem).
 
 **Repo location note**: this project has been worked on from more than one machine/path (`F:\My laptob\Project\2-Subscription Tracker` in earlier sessions, `D:\Projects\All\2-Subscription Tracker` currently). Always trust the actual current working directory over any path string in this document.
+
+**Local dev test account**: `mostafa@subtracker.local` / `DevPass!2026` — already promoted to system admin via `SystemAdmin:BootstrapEmail` in `appsettings.Development.json`, so `/admin` works without extra setup.
 
 ## 1. What this project is
 
@@ -16,24 +20,52 @@ An enterprise-grade Subscription Tracker SaaS: .NET 10 Web API backend (Clean Ar
 - Don't ask for approval after every milestone; continue automatically. Only stop for a real blocker or an architectural decision that needs the user's input.
 - At the end of each milestone: report what was implemented, files touched, build status, test status, blockers — then continue.
 
-## 2. Current state — feature-complete
+## 2. Current state — feature-complete, audit-closed
 
-**Every originally-scoped milestone plus every stretch item flagged along the way is now implemented, tested, and browser-verified.** That includes: Category/Tag/PaymentMethod CRUD, Budget CRUD (with live spend computed from real subscription data), Workspace management (settings, member invite/accept/remove/role-change, pending invitations), session management (list/revoke refresh tokens), 2FA (TOTP setup/enable/disable, enforced at login), subscription attachment upload/download/delete, reports export (CSV + Excel), and system role seeding (global Member/Viewer templates). See §6 for the itemized checklist and the short list of what's genuinely still open.
+**Every originally-scoped milestone, every stretch item flagged along the way, and every finding from the 2026-07-29 enterprise-readiness audit is now implemented, tested, and browser-verified.**
 
-The full stack has been **run end-to-end for real** (not just unit-tested) multiple times across sessions, most recently a single continuous pass covering every feature above in one browser session: register → login → create a budget (confirm live spend shows 0) → open Workspace (confirm the seeded Member/Viewer roles appear in the invite dropdown) → open Security → set up 2FA (computed a real TOTP code client-side via Web Crypto, confirmed enable/disable both work) → log out → log back in and confirm the login flow actually demands a 6-digit code → create a subscription → upload/download/delete an attachment on it → confirm the budget's live spend updates to reflect the new subscription (0.00 → 15.99) → export both CSV and Excel reports. Zero console errors across the whole pass. See §5 for the two real bugs this and earlier passes caught.
+Original scope: Category/Tag/PaymentMethod CRUD, Budget CRUD (with live spend computed from real subscription data), Workspace management (settings, member invite/accept/remove/role-change, pending invitations), session management (list/revoke refresh tokens), 2FA (TOTP setup/enable/disable, enforced at login), subscription attachment upload/download/delete, reports export (CSV, Excel, PDF), and system role seeding (global Member/Viewer templates).
 
-**Test count: 132/132 backend tests passing** (48 Domain, 81 Application, 3 API integration) **+ 11/11 frontend tests passing** (Vitest, via `ng test`).
+Audit-driven additions (all closed 2026-08-03, see §2b): workspace switcher (Member/Viewer roles are now actually reachable), EF Core global query filters for defense-in-depth tenant isolation, a custom role builder (workspace-defined permission sets, not just Owner/Member/Viewer), cross-tenant system administration (`/admin`, user enable/disable, health counts), in-app notifications with live SignalR push, a renewal calendar view, invite-by-email for users who don't have an account yet, an audit log, client-side permission-based UI gating, rate limiting on sensitive auth endpoints, a production-secrets startup guard, and an OpenTelemetry OTLP exporter. A follow-on session (2026-08-05) also gave the whole app a consistent visual design system, fixed a real dark-mode bug and a real mobile-overflow bug, added a system-admin job-trigger endpoint for on-demand background job runs, and brought frontend test coverage to every feature component.
 
-**Build: 0 warnings, 0 errors** across all 7 .NET projects; `ng build` and `ng test` both clean.
+The full stack has been **run end-to-end for real** (not just unit-tested) many times across sessions — registration → login → 2FA setup/enforcement → subscription CRUD with attachments → budgets with live spend → workspace invite/accept/switch → audit log attribution → permission-gated UI → cross-tenant admin actions → live SignalR notification push after a manually-triggered background job — all verified against a real API + LocalDB with zero console errors. See §5 for the specific bugs these passes caught (including two genuine production bugs: a 500 on Budget delete, and a dark-mode CSS transition bug).
+
+**Test count: 188/188 backend tests passing** (48 Domain, 108 Application, 26 API integration; xUnit + NSubstitute + FluentAssertions) **+ 132/132 frontend tests passing** (Vitest, via `ng test`, up from 26 at the start of the audit — every feature component now has a spec file).
+
+**Build: 0 warnings, 0 errors** across all .NET projects; `ng build` and `ng test` both clean.
 
 ### Git history
 
-Everything through Category/Tag/PaymentMethod CRUD is committed. **The Budget/Workspace/session-management/2FA/attachment-upload/reports-export/role-seeding work described in this update is uncommitted as of this HANDOVER edit** — commit it yourself (or ask to have it committed) once you've reviewed the diff. Prior history (all committed):
+All of the above is committed. Recent history, newest first (see `git log` for the full list back to the initial scaffold):
 
 ```
+f27ffd4 test: finish frontend test coverage; re-verify mobile with a proper sweep
+f8bf0b8 test: add frontend unit tests for subscription-form, settings, and workspace
+8bcd245 test: add frontend unit tests for dashboard, budgets, and subscription list
+e38d8f4 feat: add job-trigger admin endpoint, fix dark-mode/mobile-overflow bugs
+d058bac docs: add WHATS_LEFT.md status snapshot for picking up work in a new session
+20ffb28 feat: finish rolling the design system out across every remaining page
+733e49f feat: extend design system to budgets, settings, and calendar
+9403e25 feat: redesign subscriptions list/detail/form to match the app's new design language
+106f623 feat: give the dashboard a friendlier, more playful personality
+4a2131b feat: swap auth backdrop to Vanta WAVES, redesign dashboard as a hero page
+4aca642 feat: professional design overhaul with Vanta.js animated auth backdrop
+e42927a feat: wire OpenTelemetry OTLP exporter
+a68a0a4 test: add integration coverage for previously-untested controllers, fix real budget-delete bug
+222078d feat: add invite-by-email for unregistered users
+e79e335 feat: add PDF subscriptions report export
+e2fc67a feat: add renewal calendar view
+4a7b644 feat: add in-app notification center with live SignalR push
+c09bdf0 feat: add cross-tenant system administration
+b384110 feat: add custom role builder
+2ca2cdc feat: add EF Core global query filters for tenant isolation
+f2be52a feat: fix workspace switcher end-to-end
+3f09e5f feat: add audit logging, permission-based UI gating, and a11y/API-doc fixes
+d2d445d feat: add rate limiting, background job tests, production secrets guard, and READMEs
+7cf6990 feat: complete remaining stretch scope (Budgets, Workspace, 2FA, sessions, attachments, reports)
+b22dfdd feat: add Budget CQRS, Workspace management, and system role seeding
 4859218 feat: add Category/Tag/PaymentMethod CRUD and wire into subscription form
 06d3732 feat: add Angular Milestone 10 features (auth pages, subscriptions CRUD, dashboard)
-c6f65dc docs: update HANDOVER.md for Milestone 9 completion
 6133d33 feat: add Angular frontend scaffold with working auth flow
 3a76673 feat: add Docker support (Dockerfile, docker-compose, .env.example)
 bf2bdc1 feat: add Quartz.NET background jobs for renewals, expiry, and budget alerts
@@ -47,6 +79,34 @@ e6d6361 chore: scaffold Clean Architecture .NET 10 solution
 ```
 
 Read each commit message in full (`git log -1 <hash>`) before touching related code — they document *why*, not just *what*.
+
+## 2b. The 2026-07-29 audit and its fixes (2026-08-03)
+
+A full code-level audit against an enterprise SaaS checklist (dashboard, auth, subscriptions, budgets, notifications, roles/permissions, audit logs, admin, multi-tenancy, API/testing/logging quality, OpenTelemetry) found 11 gaps, all closed in one autonomous session, committing after each with build+test+live-API verification:
+
+1. **Workspace switcher** — `LoginCommandHandler` always logged a user into the workspace they *own* in preference to any workspace they'd been invited into as Member/Viewer, so those roles were unreachable through the normal login flow even after accepting an invitation. Fixed with `GetMyWorkspacesQuery` + `AuthService.switchWorkspace()` (reuses the refresh-token endpoint's existing but previously-unused target-workspace validation) + a shell dropdown. Verified live: switching actually re-scopes the JWT's permission claims and the UI gates correctly.
+2. **Multi-tenant EF Core global query filters** added on Category/Tag/PaymentMethod/Subscription/Budget/Notification/EmailInvitation (defense-in-depth; deliberately *not* on User/Role/Workspace/AuditLogEntry, which have legitimate cross-tenant reads). No-ops when `ICurrentUserService.WorkspaceId` is null (background jobs). Verified with two real tenants via curl: cross-tenant reads correctly return empty/404.
+3. **Custom role builder** — `CreateRole`/`UpdateRole`/`DeleteRole`/`GetWorkspaceRoles`/`GetPermissionCatalog`, gated by `workspace:manage-roles`. `GetAssignableRoles` now includes workspace-owned roles so custom roles are immediately invitable. Frontend `/roles` page with a permission checkbox matrix.
+4. **System admin / cross-tenant administration** — `User.IsSystemAdmin` + `system_admin` JWT claim, bootstrapped only via `SystemAdmin:BootstrapEmail` config (no self-promotion path exists anywhere in the UI, deliberately). `AdminController`: list all workspaces/users, disable/enable accounts, cross-tenant health counts. Frontend `/admin` page.
+5. **In-app notifications** — `Notification` aggregate + `INotificationPublisher` (implemented in the Api layer like `ICurrentUserService`, since SignalR needs the web SDK) called by `RenewalReminderJob`/`BudgetAlertJob` alongside their existing emails. SignalR hub at `/hubs/notifications` (JWT via `access_token` query param — the only way to auth a WebSocket handshake). Notification bell in the shell topbar.
+6. **Renewal calendar** — `/calendar` month grid. The grid-building logic is a pure function (`calendar-grid.ts`) specifically so it's unit-testable without Angular DI — this caught a real date-math bug (a renewal on the 1st of a month rendered under the *next* month's same-numbered day) before it shipped.
+7. **PDF export** — `GET /reports/subscriptions/pdf` via QuestPDF (free Community license, accepted in the handler's static constructor so it also covers direct-construction unit tests).
+8. **Invite-by-email for unregistered users** — new `EmailInvitation` aggregate (mirrors `VerificationToken`'s hashed-token/expiry pattern). `InviteMemberCommandHandler` creates one + emails a sign-up link instead of failing with `UserNotFound`; `RegisterUserCommandHandler` auto-consumes matching invitations at registration, adding the new user as an Invited member (still requires explicit accept, same as the existing-user flow).
+9. **Expanded test coverage** — added `WorkspaceControllerTests`/`BudgetsControllerTests`/`CategoriesControllerTests`/`RolesControllerTests`/`AdminControllerTests`/`ReportsControllerTests`/`NotificationsControllerTests` (real `WebApplicationFactory` + LocalDB, not mocked). **Immediately caught a real, previously-unknown production bug**: deleting any Budget returned 500. Root cause: `Budget.Amount` is an owned `Money` value object (`OwnsOne`, same table) — `AuditableEntityInterceptor`'s soft-delete cascade only fixed up child entries implementing `ISoftDeletable`, so the owned `Money` entry stayed `EntityState.Deleted` while its owner flipped to `Modified`, and EF Core throws on that contradiction at `SaveChangesAsync`. No handler-level unit test could ever have caught this (they mock `IRepository` entirely, never touching the real interceptor pipeline). Fixed in `AuditableEntityInterceptor.CascadeSoftDelete` by also flipping owned (non-`ISoftDeletable`) target entries to `Modified`.
+10. **OpenTelemetry OTLP exporter** wired (config key `OpenTelemetry:OtlpEndpoint`, unset by default), plus EF Core tracing instrumentation.
+11. **Docker verification** — still genuinely blocked at the time: no Docker binary/Docker Desktop available in that environment. See §6/§7 for the current (2026-08-05) status, which has changed but is still blocked.
+
+Two earlier UI-gap fixes from the same audit worth knowing about: the frontend never decoded the JWT's `permission` claims, so every authenticated user saw every Create/Edit/Delete button regardless of role — fixed with a client-side `PermissionsService` (unit-tested) gating buttons by the same permission codes the backend already enforced (the API itself was never actually vulnerable). And Swagger/OpenAPI XML doc generation was enabled, plus `aria-label`s and keyboard operability on icon-only/clickable-row UI, plus a mobile hamburger nav (the sidenav had been fixed-desktop-only with no responsive breakpoint).
+
+## 2c. 2026-08-05 session — design system, real bugs fixed, full frontend test coverage
+
+- **Design system**: every page now shares one consistent visual language — gradient-accented cards, a `.page-header`/`.page-eyebrow` pattern, icon-chip panel headers, hover-lift cards, Inter/Manrope typography, a Vanta TOPOLOGY animated backdrop on auth pages.
+- **Real dark-mode bug found and fixed**: `body`'s `background-color`/`color` had a CSS `transition:` that never re-resolved when the theme changed purely via a custom-property update (`:root[data-theme='dark']` swapping `--color-bg`/`--color-text`) — text and background stayed stuck at light-theme values everywhere they relied on inherited `color` from `body`, even though the CSS custom properties themselves were updating correctly. Fixed by removing the transition from `body` in `styles.scss`.
+- **Real mobile-overflow bug found and fixed**: the dashboard's decorative glow orbs (`22rem`/`16rem` wide, `position: absolute`, `z-index: -1`) weren't contained by their parent, so on a narrow viewport they could push the page into horizontal scroll. Fixed with `overflow: hidden` on `.dashboard-page`.
+- **RTL/Arabic verified clean** — no hardcoded physical-direction CSS anywhere touched this session; everything uses logical properties or flexbox that auto-flips.
+- **Mobile sweep**: all 12 authenticated pages plus the login page checked at narrow viewports, zero horizontal-overflow bugs found (one caveat on the exact pixel width achieved — see §7).
+- **System-admin job-trigger endpoint**: `POST /api/v1/admin/jobs/{jobName}/trigger` (job names: `renewal-reminder`, `auto-renewal`, `expire-subscriptions`, `budget-alert`) fires a Quartz job immediately instead of waiting for its cron schedule. Used to manually trigger `budget-alert` and confirm the SignalR notification arrived live in an already-open browser tab (bell badge 0 → 1, no reload) — the first time the live-push path was actually exercised end-to-end rather than just the HTTP read/write path. Covered by 6 integration tests in `AdminControllerTests.cs`.
+- **Frontend test coverage brought to every feature component** — went from 26 to 132 passing tests across four sessions: `dashboard.spec.ts`, `budgets.spec.ts`, `subscription-list.spec.ts`, `subscription-form.spec.ts`, `settings.spec.ts`, `workspace.spec.ts`, `calendar.spec.ts`, `reports.spec.ts`, `security.spec.ts`, `roles.spec.ts`, `admin.spec.ts`, `audit-log.spec.ts`. All use the same `TestBed.runInInjectionContext(() => new X())` + `useValue` stub pattern. Note: `reports.spec.ts` needs `vi.stubGlobal` for `URL.createObjectURL` since jsdom doesn't implement it.
 
 ## 3. How to run it
 
@@ -255,47 +315,35 @@ Also fixed (lower severity, caught before runtime):
 - **No CORS policy existed at all.** Never surfaced until the Angular dev server actually tried to call the API from a different origin — the browser blocked every request. Fixed by adding a `Cors:AllowedOrigins`-configurable policy (`DependencyInjection.AddCors`/`FrontendCorsPolicy`, defaults to `http://localhost:4200`) and `app.UseCors(...)` in the pipeline (must come before `UseAuthentication`/`UseAuthorization`). If you deploy the frontend to a different origin, add it to `Cors:AllowedOrigins` in the relevant `appsettings.*.json` or the environment won't be reachable — this class of bug is invisible to any test that doesn't literally run a browser against the API.
 - The Claude Browser tool's synthetic mouse clicks and `form_input` DOM-value-setting were unreliable in this environment (clicks sometimes didn't register on the first attempt; `form_input` set the DOM `.value` without dispatching a real `input` event, so Angular's reactive forms never saw the change and `form.invalid` stayed `true`, silently no-opping `submit()`). This is a tooling quirk, not an app bug — worth knowing if you hit the same "nothing happens on click" symptom: verify with `javascript_tool` by checking `input.className` for `ng-valid`/`ng-dirty`, and if needed drive the native `HTMLInputElement.prototype.value` setter + dispatch a real `Event('input', {bubbles:true})` yourself to confirm the underlying app logic is correct independent of the input tool.
 
-## 6. Milestone status — everything done; only Docker verification and production secrets remain
+## 6. Milestone status — feature-complete; only Docker verification is a genuine blocker
 
-Original 10-milestone plan, all done (unchanged from prior handovers — see git history for exactly what shipped in each):
+Original 10-milestone plan, all done. Every stretch item ever flagged (Category/Tag/PaymentMethod CRUD, Budget CRUD, Workspace management, session management, 2FA, attachment upload, reports export in CSV/Excel/PDF, system role seeding) is done. Every 2026-07-29 audit finding (workspace switcher, tenant isolation, custom role builder, system admin, in-app notifications, renewal calendar, invite-by-email for unregistered users, audit log, permission-gated UI, rate limiting, production-secrets guard, OpenTelemetry) is done — see §2/§2b/§2c for detail on each.
 
-1. ✅ Solution scaffold
-2. ✅ SharedKernel + Domain building blocks
-3. ✅ Core domain model
-4. ✅ EF Core persistence layer
-5. ✅ Application layer CQRS
-6. ✅ API layer (auth, versioning, Swagger, middleware)
-7. ✅ Background jobs & notifications (Quartz.NET — see §4 "Background jobs" above)
-8. ✅ Docker support (Dockerfile + docker-compose — see §4 "Docker" above; **still not build-tested**, no Docker available in this environment — see §7)
-9. ✅ Angular frontend scaffold (routing, lazy loading, auth interceptor + guards, layout shell, dark/light theme, en/ar i18n with RTL, working Login/Register)
-10. ✅ Angular features (auth pages, dashboard, subscriptions CRUD/actions)
-
-**Every stretch item ever flagged in this document is now also done:**
-- ✅ Category/Tag/PaymentMethod CRUD (backend + frontend, wired into subscription-form and subscription-detail)
-- ✅ Budget CRUD, with live current-spend computed from real subscription data (shared `BudgetSpendCalculator` used by both the interactive query and `BudgetAlertJob`)
-- ✅ Workspace management: settings update, member invite/accept/remove/role-change, pending invitations
-- ✅ Session management: list/revoke active refresh tokens
-- ✅ Two-factor authentication: TOTP setup/enable/disable, enforced at login (`Login.TwoFactorRequired`/`Login.InvalidTwoFactorCode`)
-- ✅ Subscription attachment upload/download/delete (local-disk storage, path-traversal-safe)
-- ✅ Reports export: CSV and Excel (via ClosedXML), respecting the same filters as the subscription list
-- ✅ System role seeding: global "Member"/"Viewer" templates, seeded idempotently at startup
-
-**Genuinely still open** (not blocking, but real gaps — pick up as a follow-on if needed):
-- **Custom role builder** — workspaces can only assign the seeded Member/Viewer roles or their own ad-hoc Owner role; there's no UI/API to define a custom role with a hand-picked permission set. `Permissions.Workspace.ManageRoles` exists as a permission code but nothing checks it yet.
-- **Docker verification** — still never actually run through `docker build`/`docker compose up` in any session (no Docker binary in this environment). See §7.
-- **PDF report export** — only CSV/Excel were built; PDF was mentioned as a stretch possibility but wasn't picked up (Excel covers the "structured export" need, CSV covers "universal/scriptable" — a PDF would mainly serve a "nicely formatted for printing/emailing" use case that nobody's asked for yet).
-- **Invite-by-email for unregistered users** — `InviteMember` requires the invitee to already have an account; there's no "invite someone who's never signed up" flow (would need an email-based invitation token similar to the password-reset flow).
-- Production secrets/config — see §7, unchanged.
+**Genuinely still open** (real gaps, not blocking normal development):
+- **Docker verification** — see §7. This is an *environment* problem (Docker Desktop's WSL2 backend won't come up on this machine), not a code problem — the Dockerfile/compose file have been hand-traced against the current project structure and look correct, but have never actually completed a `docker build`/`docker compose up` run.
+- **True 375px shell-page rendering** — the 2026-08-05 mobile sweep found zero overflow bugs across every authenticated page, but every page inside `.shell` consistently rendered at ~459px regardless of the requested viewport width (looks like a Browser-pane/environment floor tied to the fixed-position mobile sidenav + flex shell layout, not something under the app's control). The standalone `/auth/login` page (no shell) did render at a true 375px with zero issues. Re-run the same sweep if a different Browser pane/device becomes available.
 
 ## 7. Known non-blocking gaps
 
-- Docker files exist but are unverified — see §4 "Docker" caveat above. Run `docker compose up --build` and fix what breaks before trusting them. This has been true across every session on this project so far; the environment has simply never had a `docker` binary available.
-- `Jwt:SigningKey` in `appsettings.Development.json` is a placeholder string — fine for local dev, **must** come from environment variable / secret manager in any real deployment (appsettings.Production.json is gitignored for exactly this reason).
-- OpenTelemetry is wired up but has no exporter destination configured (no OTLP collector endpoint in appsettings) — traces/metrics are collected in-process but not shipped anywhere yet.
+- **Docker** — Docker Desktop is now actually installed on the current dev machine (it wasn't in earlier sessions), and `docker`/`docker compose` CLIs work, but starting Docker Desktop left it stuck: `docker info` returns `500 Internal Server Error` on the daemon pipe, and no `vmmem`/WSL process ever appears — its WSL2 backend never comes up. This needs a human at the Docker Desktop UI (there may be a setup wizard, a WSL update prompt, or a virtualization/BIOS setting involved) — it's not fixable by retrying `docker info` from a script. **Next step: open Docker Desktop yourself, resolve whatever it's stuck on, then run `docker compose up --build` from the repo root** and fix whatever first-run issues surface.
+- `Jwt:SigningKey` in `appsettings.Development.json` is a placeholder string — fine for local dev; a real deployment **must** supply it via environment variable / secret manager (`ProductionSecretsGuard` now refuses to start the API in `Production` if it's missing or still the placeholder — see §2b).
+- OpenTelemetry is wired up (OTLP exporter, config key `OpenTelemetry:OtlpEndpoint`) but unset by default — traces/metrics are collected in-process but not shipped anywhere until you point it at a real collector.
 - `RegisterUserCommandHandler` returns `200 OK` (via `ToActionResult`), not `201 Created` — acceptable (there's no natural "GetUserById" endpoint to `CreatedAtAction` against yet), but worth a second look once a user-profile GET endpoint exists.
-- No rate-limit/lockout on the `forgot-password`/`verify-email` endpoints beyond the global 100/min limiter — fine for now, revisit if abuse becomes a concern.
+- Sensitive auth endpoints (`forgot-password`, `reset-password`, `verify-email`) now have dedicated rate limiting (5 requests / 15 minutes per IP, on top of the global 100/min limiter) — see `RateLimitingTests.cs`.
 - `FileStorage:RootPath` (attachments) defaults to a relative `storage/attachments` path — fine for a single-instance deployment, but won't survive a container restart/redeploy unless mounted as a persistent volume, and won't work at all across multiple API replicas (each would have its own local disk). Swap `LocalFileStorageService` for a blob-storage implementation of `IFileStorageService` before running more than one replica.
 - The `/auth/2fa/setup` → `/auth/2fa/enable` flow hands the raw TOTP secret back to the client twice (once in the setup response, once implicitly when the client re-submits it to enable) rather than holding server-side state between the two calls. This is a deliberate simplicity trade-off (no extra "pending 2FA setup" table/cache needed) and is safe *as long as the connection is HTTPS in production* — the secret is only ever transmitted over the wire, never logged. Don't add logging that captures request bodies on these two endpoints.
+- No true end-to-end proof that the SignalR live-push fires from a *cron-scheduled* job run (only from the manually-triggered admin job-trigger endpoint, which exercises the same code path but isn't the same as waiting for the actual schedule).
+
+## 8. Ideas for further improvement (not yet scoped or requested)
+
+None of these are blocking or currently requested — listed here as candidates if you're looking for next work:
+
+- **Add a `LICENSE` file** — the repo currently has none; add one before any public distribution or open-source release.
+- **CI pipeline** (GitHub Actions) — no `.github/workflows/` exists yet; a build+test workflow on push/PR would catch regressions before they reach `main` and is low-effort given the test suite already exists and passes cleanly.
+- **Multi-currency support for budgets** — `BudgetAlertJob`/`GetBudgetsQuery` only sum subscriptions in the *same currency* as the budget, with no FX conversion; a real multi-currency workspace would silently undercount spend in other currencies.
+- **Blob storage for attachments** — see the `FileStorage:RootPath` gap above; matters as soon as more than one API replica is ever run.
+- **A dedicated aggregate/reporting endpoint for dashboard KPIs** — the dashboard currently computes KPIs client-side from `GetSubscriptionsQuery` capped at 100 results, so a workspace with >100 subscriptions will show undercounted KPIs.
+- **Persistent (non-RAM) Quartz job store** — fine for a single instance today; needed before running multiple API replicas so triggers don't duplicate-fire.
 
 ## 8. Workflow notes for continuing
 
