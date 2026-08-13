@@ -21,13 +21,16 @@ RUN dotnet publish src/Presentation/SubscriptionTracker.Api/SubscriptionTracker.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# curl is needed for the HEALTHCHECK below; the base image doesn't include it.
+# curl is needed for the HEALTHCHECK below, adduser for the non-root user setup — neither ships
+# in the aspnet:10.0 base image.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl adduser \
     && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system --gid 1000 appgroup \
-    && adduser --system --uid 1000 --ingroup appgroup appuser
+# No explicit --gid/--uid: the aspnet:10.0 base image already has GID/UID 1000 taken by its
+# built-in "ubuntu" user, so let adduser pick the next free ids instead of colliding with it.
+RUN addgroup --system appgroup \
+    && adduser --system --ingroup appgroup appuser
 
 COPY --from=build /app/publish .
 

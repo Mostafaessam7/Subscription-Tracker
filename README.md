@@ -84,8 +84,8 @@ Copy `.env.example` to `.env`, fill in real values, then run:
 docker compose up --build
 ```
 
-**Note:** these Docker files have not yet been build-verified end-to-end — see [HANDOVER.md](HANDOVER.md#7-known-non-blocking-gaps)
-for the current status. Expect to fix minor issues on first run.
+**Note:** verified end-to-end (`docker compose up --build`, API health checks, and a live registration against the
+containerized SQL Server) — see [HANDOVER.md §7](HANDOVER.md#7-known-non-blocking-gaps) for details.
 
 ## Running tests
 
@@ -153,4 +153,4 @@ attachments, a LICENSE file).
 
 ## License
 
-Not yet specified — add a `LICENSE` file before any public distribution.
+MIT — see [LICENSE](LICENSE).
