@@ -57,7 +57,7 @@ public static class DependencyInjection
         services.AddSingleton<IExchangeRateProvider, StaticExchangeRateProvider>();
         services.AddSingleton<IBackgroundJobTrigger, QuartzBackgroundJobTrigger>();
 
-        AddBackgroundJobs(services);
+        AddBackgroundJobs(services, configuration);
 
         return services;
     }
@@ -83,10 +83,31 @@ public static class DependencyInjection
         }
     }
 
-    private static void AddBackgroundJobs(IServiceCollection services)
+    /// <summary>
+    /// Backed by SQL Server (the same database as everything else - see QuartzSchemaInitializer for how its
+    /// QRTZ_* tables get created) rather than the default in-memory RAMJobStore, so scheduled triggers survive
+    /// an API restart and - the actual motivating reason - don't duplicate-fire if this API is ever scaled to
+    /// more than one replica (RAMJobStore has no cross-instance coordination at all; every replica would run
+    /// every job independently). UseProperties=true keeps job/trigger data as strings instead of requiring
+    /// .NET binary serialization, and UseSystemTextJsonSerializer avoids Quartz's legacy BinaryFormatter-based
+    /// serializer (deprecated/insecure, and blocked entirely on newer .NET).
+    /// </summary>
+    private static void AddBackgroundJobs(IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("SubscriptionTrackerDb")
+            ?? throw new InvalidOperationException(
+                "ConnectionStrings:SubscriptionTrackerDb is required (Quartz's persistent job store uses the same database).");
+
         services.AddQuartz(quartz =>
         {
+            quartz.UsePersistentStore(store =>
+            {
+                store.UseProperties = true;
+                store.RetryInterval = TimeSpan.FromSeconds(15);
+                store.UseSqlServer(sql => sql.ConnectionString = connectionString);
+                store.UseSystemTextJsonSerializer();
+            });
+
             AddDailyJob<RenewalReminderJob>(quartz, "renewal-reminder", "0 0 6 * * ?");
             AddDailyJob<AutoRenewalJob>(quartz, "auto-renewal", "0 15 6 * * ?");
             AddDailyJob<ExpireSubscriptionsJob>(quartz, "expire-subscriptions", "0 30 6 * * ?");
