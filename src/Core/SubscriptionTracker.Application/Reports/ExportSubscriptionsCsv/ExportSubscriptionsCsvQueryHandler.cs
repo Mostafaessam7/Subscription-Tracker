@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -55,11 +56,25 @@ public sealed class ExportSubscriptionsCsvQueryHandler(IApplicationDbContext dbC
         return Result.Success(new ReportFileDto(fileName, "text/csv", content));
     }
 
+    // Characters that make a spreadsheet app (Excel/Sheets/LibreOffice) treat a CSV cell as a formula rather
+    // than literal text on open - CSV Injection / "Formula Injection" (OWASP, CWE-1236). Name/Provider are
+    // free-text user input (see CreateSubscriptionCommandValidator), so a subscription named e.g.
+    // "=HYPERLINK(...)" would otherwise execute as a formula for whoever opens the exported file.
+    private static readonly SearchValues<char> FormulaInjectionPrefixes = SearchValues.Create(['=', '+', '-', '@', '\t', '\r']);
+
     private static string EscapeCsvField(string field)
     {
         if (field.Length == 0)
         {
             return field;
+        }
+
+        // Per OWASP's mitigation: prefix with a single quote so spreadsheet apps render it as text. It stays
+        // visible in the raw CSV (unlike Excel's own UI convention of hiding a leading ' on manual entry), but
+        // that's an acceptable, clearly-flagged trade-off for not silently executing arbitrary formulas.
+        if (field.IndexOfAny(FormulaInjectionPrefixes) == 0)
+        {
+            field = "'" + field;
         }
 
         return field.IndexOfAny([',', '"', '\n', '\r']) >= 0
