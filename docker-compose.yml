@@ -41,6 +41,12 @@ services:
       Smtp__FrontendBaseUrl: ${FRONTEND_BASE_URL:-http://localhost:4200}
       OpenTelemetry__OtlpEndpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       SystemAdmin__BootstrapEmail: ${SYSTEM_ADMIN_BOOTSTRAP_EMAIL:-}
+      # Attachments default to local disk (fine for a single instance, but see HANDOVER.md - it won't survive
+      # a container restart unless storage/attachments is a mounted volume). Set FILE_STORAGE_PROVIDER=AzureBlob
+      # + FILE_STORAGE_BLOB_CONNECTION_STRING to use durable, replica-safe Azure Blob Storage instead.
+      FileStorage__Provider: ${FILE_STORAGE_PROVIDER:-Local}
+      FileStorage__Blob__ConnectionString: ${FILE_STORAGE_BLOB_CONNECTION_STRING:-}
+      FileStorage__Blob__ContainerName: ${FILE_STORAGE_BLOB_CONTAINER_NAME:-subscription-attachments}
     ports:
       - "8080:8080"
     restart: unless-stopped
