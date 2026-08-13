@@ -48,6 +48,16 @@ public sealed class BudgetAlertJob(
             .Select(w => new { w.Id, w.OwnerId })
             .ToDictionaryAsync(w => w.Id, w => w.OwnerId, cancellationToken);
 
+        // Prefetched in bulk rather than one dbContext.Users query per exceeded budget inside the loop below
+        // (same fix RenewalReminderJob already applies for its per-subscription owner lookups) - this job
+        // sweeps every budget across every workspace, so an N+1 here scales with the number of workspaces
+        // simultaneously over threshold on a given day, not a fixed small number.
+        var ownerIds = workspaceOwners.Values.Distinct().ToList();
+        var owners = await dbContext.Users
+            .Where(u => ownerIds.Contains(u.Id))
+            .Select(u => new { u.Id, Email = u.Email.Value, u.FirstName })
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
         var alertsSent = 0;
 
         foreach (var budget in budgets)
@@ -69,17 +79,7 @@ public sealed class BudgetAlertJob(
                 continue;
             }
 
-            if (!workspaceOwners.TryGetValue(budget.WorkspaceId, out var ownerId))
-            {
-                continue;
-            }
-
-            var owner = await dbContext.Users
-                .Where(u => u.Id == ownerId)
-                .Select(u => new { Email = u.Email.Value, u.FirstName })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (owner is null)
+            if (!workspaceOwners.TryGetValue(budget.WorkspaceId, out var ownerId) || !owners.TryGetValue(ownerId, out var owner))
             {
                 continue;
             }
