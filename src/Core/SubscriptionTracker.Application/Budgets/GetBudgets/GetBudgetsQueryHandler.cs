@@ -7,7 +7,8 @@ using SubscriptionTracker.Domain.Subscriptions.Enums;
 
 namespace SubscriptionTracker.Application.Budgets.GetBudgets;
 
-public sealed class GetBudgetsQueryHandler(IApplicationDbContext dbContext, ICurrentUserService currentUserService)
+public sealed class GetBudgetsQueryHandler(
+    IApplicationDbContext dbContext, ICurrentUserService currentUserService, IExchangeRateProvider exchangeRateProvider)
     : IQueryHandler<GetBudgetsQuery, IReadOnlyList<BudgetDto>>
 {
     public async Task<Result<IReadOnlyList<BudgetDto>>> Handle(GetBudgetsQuery request, CancellationToken cancellationToken)
@@ -36,10 +37,18 @@ public sealed class GetBudgetsQueryHandler(IApplicationDbContext dbContext, ICur
 
         var dtos = budgets.Select(budget =>
         {
+            // Subscriptions in a different currency are converted via IExchangeRateProvider rather than
+            // excluded outright; a subscription in a currency with no known rate contributes 0, same as the
+            // old "different currency = skip" behavior, so an unconfigured rate table is a safe no-op.
             var currentSpend = subscriptions
-                .Where(s => s.CurrencyCode == budget.Amount.CurrencyCode)
                 .Where(s => budget.CategoryId is null || s.CategoryId == budget.CategoryId)
-                .Sum(s => BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period));
+                .Sum(s =>
+                {
+                    var rate = s.CurrencyCode == budget.Amount.CurrencyCode
+                        ? 1m
+                        : exchangeRateProvider.GetRate(s.CurrencyCode, budget.Amount.CurrencyCode) ?? 0m;
+                    return rate * BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period);
+                });
 
             var currentSpendMoney = Money.Create(currentSpend, budget.Amount.CurrencyCode);
             var hasExceeded = currentSpendMoney.IsSuccess && budget.HasExceededThreshold(currentSpendMoney.Value);
