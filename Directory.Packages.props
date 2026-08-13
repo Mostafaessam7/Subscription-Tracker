@@ -52,6 +52,7 @@
     <!-- Background Jobs -->
     <PackageVersion Include="Quartz" Version="3.13.1" />
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.13.1" />
+    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="3.13.1" />
 
     <!-- Caching -->
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.10" />

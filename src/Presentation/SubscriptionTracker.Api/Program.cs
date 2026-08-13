@@ -7,6 +7,7 @@ using SubscriptionTracker.Api;
 using SubscriptionTracker.Api.Startup;
 using SubscriptionTracker.Application;
 using SubscriptionTracker.Infrastructure;
+using SubscriptionTracker.Infrastructure.BackgroundJobs;
 using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Seeding;
 
@@ -35,6 +36,13 @@ if (builder.Configuration.GetValue("ApplyMigrationsOnStartup", defaultValue: tru
     dbContext.Database.Migrate();
     await SystemRoleSeeder.SeedAsync(dbContext);
     await SystemAdminSeeder.SeedAsync(dbContext, builder.Configuration);
+
+    // Quartz's persistent job store (see Infrastructure.DependencyInjection.AddBackgroundJobs) needs its
+    // QRTZ_* tables created before the scheduler starts - EF migrations don't own this schema since it's
+    // Quartz's own, framework-agnostic table set, not one of our aggregates.
+    var connectionString = builder.Configuration.GetConnectionString("SubscriptionTrackerDb")
+        ?? throw new InvalidOperationException("ConnectionStrings:SubscriptionTrackerDb is required.");
+    await QuartzSchemaInitializer.EnsureSchemaAsync(connectionString);
 }
 
 app.UseExceptionHandler();

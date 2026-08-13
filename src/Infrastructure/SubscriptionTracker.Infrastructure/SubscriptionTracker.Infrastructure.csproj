@@ -21,8 +21,13 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="Quartz.Serialization.SystemTextJson" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="Azure.Storage.Blobs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BackgroundJobs\QuartzSchema\tables_sqlServer.sql" />
   </ItemGroup>
 
 </Project>
