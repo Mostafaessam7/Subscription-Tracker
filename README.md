@@ -145,11 +145,11 @@ Unset the config key (or change it) once you no longer want new accounts auto-pr
 
 ## What's next
 
-The project is feature-complete against its original scope plus a full enterprise-readiness audit — see
-[HANDOVER.md §6-8](HANDOVER.md#6-milestone-status--feature-complete-only-docker-verification-is-a-genuine-blocker)
-for the accurate, up-to-date list of what's genuinely still open (Docker build verification is the only real
-blocker) and a few unscoped ideas for further improvement (CI pipeline, multi-currency budgets, blob storage for
-attachments, a LICENSE file).
+The project is feature-complete against its original scope plus a full enterprise-readiness audit, and every
+previously-open item (LICENSE, CI pipeline, Docker verification, a dashboard KPI aggregate endpoint,
+multi-currency budgets, blob storage for attachments) is now done — see
+[HANDOVER.md §6-8](HANDOVER.md#6-milestone-status--feature-complete-docker-is-now-verified) for the accurate,
+up-to-date list of what's genuinely still open and a few unscoped ideas for further improvement.
 
 ## License
 

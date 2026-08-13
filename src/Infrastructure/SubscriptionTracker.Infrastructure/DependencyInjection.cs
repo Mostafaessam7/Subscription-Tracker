@@ -53,13 +53,34 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ITwoFactorService, TotpService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
-        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        AddFileStorage(services, configuration);
         services.AddSingleton<IExchangeRateProvider, StaticExchangeRateProvider>();
         services.AddSingleton<IBackgroundJobTrigger, QuartzBackgroundJobTrigger>();
 
         AddBackgroundJobs(services);
 
         return services;
+    }
+
+    /// <summary>Selects the IFileStorageService implementation via FileStorage:Provider (defaults to Local).
+    /// Fails fast at startup rather than on first upload if AzureBlob is selected without a connection string -
+    /// same "surface the misconfiguration immediately" philosophy as ProductionSecretsGuard.</summary>
+    private static void AddFileStorage(IServiceCollection services, IConfiguration configuration)
+    {
+        var provider = configuration.GetValue<FileStorageProvider?>($"{FileStorageOptions.SectionName}:Provider")
+            ?? FileStorageProvider.Local;
+
+        var connectionString = configuration[$"{FileStorageOptions.SectionName}:Blob:ConnectionString"];
+        FileStorageProviderValidator.EnsureConfigured(provider, connectionString);
+
+        if (provider == FileStorageProvider.AzureBlob)
+        {
+            services.AddSingleton<IFileStorageService, AzureBlobFileStorageService>();
+        }
+        else
+        {
+            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        }
     }
 
     private static void AddBackgroundJobs(IServiceCollection services)

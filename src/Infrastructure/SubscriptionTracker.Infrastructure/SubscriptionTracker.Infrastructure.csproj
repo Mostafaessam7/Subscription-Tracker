@@ -22,6 +22,7 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Quartz.Extensions.Hosting" />
     <PackageReference Include="MailKit" />
+    <PackageReference Include="Azure.Storage.Blobs" />
   </ItemGroup>
 
 </Project>
