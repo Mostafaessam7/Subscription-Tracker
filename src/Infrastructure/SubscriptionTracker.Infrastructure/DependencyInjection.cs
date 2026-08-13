@@ -5,6 +5,7 @@ using Quartz;
 using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Domain.Common;
 using SubscriptionTracker.Infrastructure.BackgroundJobs;
+using SubscriptionTracker.Infrastructure.Financial;
 using SubscriptionTracker.Infrastructure.Notifications;
 using SubscriptionTracker.Infrastructure.Persistence;
 using SubscriptionTracker.Infrastructure.Persistence.Interceptors;
@@ -46,12 +47,14 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
+        services.Configure<ExchangeRatesOptions>(configuration.GetSection(ExchangeRatesOptions.SectionName));
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ITwoFactorService, TotpService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IExchangeRateProvider, StaticExchangeRateProvider>();
         services.AddSingleton<IBackgroundJobTrigger, QuartzBackgroundJobTrigger>();
 
         AddBackgroundJobs(services);

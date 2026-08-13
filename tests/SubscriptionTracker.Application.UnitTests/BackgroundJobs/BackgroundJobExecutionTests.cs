@@ -132,7 +132,44 @@ public class BackgroundJobExecutionTests : IDisposable
         CreateSubscription(new DateOnly(2026, 1, 1), autoRenewal: true);
         await _dbContext.SaveChangesAsync();
 
-        var job = new BudgetAlertJob(_dbContext, emailSender, Substitute.For<INotificationPublisher>(), NullLogger<BudgetAlertJob>.Instance);
+        var job = new BudgetAlertJob(
+            _dbContext, emailSender, Substitute.For<INotificationPublisher>(), Substitute.For<IExchangeRateProvider>(),
+            NullLogger<BudgetAlertJob>.Instance);
+        await job.Execute(_jobContext);
+
+        await emailSender.Received(1).SendBudgetOverspendAlertAsync(
+            owner.Email.Value, owner.FirstName, "Streaming", Arg.Any<decimal>(), 10m, "USD", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task BudgetAlertJob_WithACrossCurrencySubscription_ShouldConvertItBeforeComparingAgainstTheThreshold()
+    {
+        var emailSender = Substitute.For<IEmailSender>();
+        var exchangeRateProvider = Substitute.For<IExchangeRateProvider>();
+        exchangeRateProvider.GetRate("EUR", "USD").Returns(1.1m);
+
+        var owner = SubscriptionTracker.Domain.Identity.User.Register(
+            Email.Create($"{Guid.NewGuid():N}@example.com").Value, "hash", "Jane", "Doe").Value;
+        var role = SubscriptionTracker.Domain.Identity.Role.Create("Owner", null, _workspaceId).Value;
+        var workspace = SubscriptionTracker.Domain.Tenancy.Workspace.Create(
+            "Acme", owner.Id, role.Id, DateTimeOffset.UtcNow, _workspaceId).Value;
+        _dbContext.Users.Add(owner);
+        _dbContext.Workspaces.Add(workspace);
+
+        var budget = Budget.Create(_workspaceId, "Streaming", Money.Create(10m, "USD").Value, BudgetPeriod.Monthly, null, 80).Value;
+        _dbContext.Budgets.Add(budget);
+
+        // 9 EUR/month * 1.1 EUR->USD ≈ 9.90 USD, comfortably over the 80%-of-10 threshold - would NOT cross
+        // the threshold if the currency mismatch caused this subscription to be silently skipped (pre-fix
+        // behavior), so this test fails loudly if conversion regresses back to "different currency = ignore".
+        var price = Money.Create(9m, "EUR").Value;
+        var cycle = BillingCycle.Create(BillingFrequency.Monthly).Value;
+        var subscription = Subscription.Create(_workspaceId, owner.Id, "Netflix", "Netflix Inc.", price, cycle, new DateOnly(2026, 1, 1)).Value;
+        _dbContext.Subscriptions.Add(subscription);
+        await _dbContext.SaveChangesAsync();
+
+        var job = new BudgetAlertJob(
+            _dbContext, emailSender, Substitute.For<INotificationPublisher>(), exchangeRateProvider, NullLogger<BudgetAlertJob>.Instance);
         await job.Execute(_jobContext);
 
         await emailSender.Received(1).SendBudgetOverspendAlertAsync(

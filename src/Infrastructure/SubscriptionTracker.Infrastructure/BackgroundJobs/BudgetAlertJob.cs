@@ -12,12 +12,14 @@ namespace SubscriptionTracker.Infrastructure.BackgroundJobs;
 
 /// <summary>
 /// Runs daily and emails the workspace owner when estimated recurring spend (subscription costs normalized to the
-/// budget's period) crosses a budget's alert threshold. Only subscriptions billed in the budget's own currency are
-/// counted - no currency conversion is performed.
+/// budget's period) crosses a budget's alert threshold. Subscriptions in a different currency than the budget are
+/// converted via IExchangeRateProvider (same static rate table GetBudgetsQuery uses, so the UI and this alert can't
+/// disagree); a currency with no known rate contributes 0, same as being excluded outright.
 /// </summary>
 [DisallowConcurrentExecution]
 public sealed class BudgetAlertJob(
-    IApplicationDbContext dbContext, IEmailSender emailSender, INotificationPublisher notificationPublisher, ILogger<BudgetAlertJob> logger) : IJob
+    IApplicationDbContext dbContext, IEmailSender emailSender, INotificationPublisher notificationPublisher,
+    IExchangeRateProvider exchangeRateProvider, ILogger<BudgetAlertJob> logger) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
@@ -51,9 +53,15 @@ public sealed class BudgetAlertJob(
         foreach (var budget in budgets)
         {
             var spent = subscriptions
-                .Where(s => s.WorkspaceId == budget.WorkspaceId && s.CurrencyCode == budget.Amount.CurrencyCode)
+                .Where(s => s.WorkspaceId == budget.WorkspaceId)
                 .Where(s => budget.CategoryId is null || s.CategoryId == budget.CategoryId)
-                .Sum(s => BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period));
+                .Sum(s =>
+                {
+                    var rate = s.CurrencyCode == budget.Amount.CurrencyCode
+                        ? 1m
+                        : exchangeRateProvider.GetRate(s.CurrencyCode, budget.Amount.CurrencyCode) ?? 0m;
+                    return rate * BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period);
+                });
 
             var spentMoney = Money.Create(spent, budget.Amount.CurrencyCode);
             if (spentMoney.IsFailure || !budget.HasExceededThreshold(spentMoney.Value))
