@@ -30,7 +30,7 @@ Audit-driven additions (all closed 2026-08-03, see §2b): workspace switcher (Me
 
 The full stack has been **run end-to-end for real** (not just unit-tested) many times across sessions — registration → login → 2FA setup/enforcement → subscription CRUD with attachments → budgets with live spend → workspace invite/accept/switch → audit log attribution → permission-gated UI → cross-tenant admin actions → live SignalR notification push after a manually-triggered background job — all verified against a real API + LocalDB with zero console errors. See §5 for the specific bugs these passes caught (including two genuine production bugs: a 500 on Budget delete, and a dark-mode CSS transition bug).
 
-**Test count: 209/209 backend tests passing** (48 Domain, 127 Application, 34 API integration; xUnit + NSubstitute + FluentAssertions) **+ 130/130 frontend tests passing** (Vitest, via `ng test`, up from 26 at the start of the audit — every feature component now has a spec file).
+**Test count: 213/213 backend tests passing** (48 Domain, 131 Application, 34 API integration; xUnit + NSubstitute + FluentAssertions) **+ 130/130 frontend tests passing** (Vitest, via `ng test`, up from 26 at the start of the audit — every feature component now has a spec file).
 
 **Build: 0 warnings, 0 errors** across all .NET projects; `ng build` and `ng test` both clean.
 
@@ -288,6 +288,11 @@ The API's password-reset/email-verification links point at `{FrontendBaseUrl}/au
 Category/Tag/PaymentMethod now have full CRUD on both ends (`core/models/catalog.models.ts` + `core/services/catalog.service.ts` on the frontend, `CategoriesController`/`TagsController`/`PaymentMethodsController` on the backend) — see the `settings/` and `subscriptions/subscription-form/` entries above.
 
 ## 5. Bugs found and fixed (read before touching related code)
+
+### From a 2026-08-13 code-quality/security cleanup pass (unprompted - no user-reported bug)
+
+- **CSV export was vulnerable to CSV Injection / Formula Injection (OWASP, CWE-1236)** — `ExportSubscriptionsCsvQueryHandler` wrote subscription `Name`/`Provider` straight into CSV cells with no protection against leading `=`/`+`/`-`/`@` characters, which Excel/Google Sheets/LibreOffice auto-execute as a formula on open. Since `Name`/`Provider` are free-text with no character restrictions (`CreateSubscriptionCommandValidator` only checks non-empty + max length), a subscription named e.g. `=HYPERLINK("http://evil.example/steal","click")` would silently become a live, clickable formula for anyone who opened an exported report — a real, reachable exploit, not theoretical. Fixed with the standard OWASP mitigation: `EscapeCsvField` now prefixes any field starting with one of those trigger characters (or tab/CR, also exploitable in some clients) with a single quote `'`, which spreadsheet apps render as literal text. **Verified the Excel exporter does *not* have the same issue** — empirically confirmed `ClosedXML`'s plain `cell.Value = someString` assignment sets `HasFormula = false` and stores a properly type-tagged string cell (XLSX has explicit cell typing, unlike CSV's untyped text, so Excel doesn't reinterpret it on open) — no fix needed there, don't assume every export format shares this risk without checking.
+- **`BudgetAlertJob` had a real N+1 query** — was calling `dbContext.Users` once per exceeded budget inside its loop, even though `RenewalReminderJob` right next to it in the same folder already established the correct fix for the identical situation (bulk-prefetch every needed owner into a dictionary before the loop). Fixed to match.
 
 ### From this session (Budget/Workspace/Session/2FA/Attachments/Reports)
 

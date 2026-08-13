@@ -88,6 +88,27 @@ public class ExportSubscriptionsCsvQueryHandlerTests : IDisposable
         csv.Should().Contain("\"Acme, Inc.\"");
     }
 
+    [Theory]
+    [InlineData("=HYPERLINK(\"http://evil.example/\",\"click me\")")]
+    [InlineData("+1+1")]
+    [InlineData("-1+1")]
+    [InlineData("@SUM(1,1)")]
+    public async Task Handle_WithASubscriptionNameThatLooksLikeAFormula_ShouldNeutralizeItWithALeadingQuote(string maliciousName)
+    {
+        // CSV Injection / Formula Injection (OWASP, CWE-1236): a cell starting with =, +, -, or @ gets
+        // executed as a formula by Excel/Sheets/LibreOffice on open. Name has no character restrictions
+        // (see CreateSubscriptionCommandValidator), so this is a reachable exploit, not just theoretical.
+        _dbContext.Subscriptions.Add(CreateSubscription(maliciousName));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.Handle(new ExportSubscriptionsCsvQuery(null, null, null, null), CancellationToken.None);
+
+        var csv = Encoding.UTF8.GetString(result.Value.Content);
+        var dataLine = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries)[1];
+        var firstField = dataLine.TrimStart('"'); // the Name column may or may not be comma-quoted depending on content
+        firstField.Should().StartWith("'" + maliciousName[..1], "a leading quote neutralizes the formula trigger without changing the visible text");
+    }
+
     public void Dispose()
     {
         _dbContext.Dispose();
