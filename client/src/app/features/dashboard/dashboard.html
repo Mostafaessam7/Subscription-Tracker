@@ -62,15 +62,15 @@
           </div>
         } @else {
           <ul class="renewal-list">
-            @for (entry of upcomingRenewals(); track entry.subscription.id) {
+            @for (entry of upcomingRenewals(); track entry.subscriptionId) {
               <li>
-                <a class="renewal-row" [routerLink]="['/subscriptions', entry.subscription.id]">
-                  <span class="renewal-avatar">{{ initials(entry.subscription.name) }}</span>
+                <a class="renewal-row" [routerLink]="['/subscriptions', entry.subscriptionId]">
+                  <span class="renewal-avatar">{{ initials(entry.name) }}</span>
                   <span class="renewal-info">
-                    <span class="renewal-name">{{ entry.subscription.name }}</span>
-                    <span class="renewal-date">{{ entry.subscription.nextRenewalDate }}</span>
+                    <span class="renewal-name">{{ entry.name }}</span>
+                    <span class="renewal-date">{{ entry.nextRenewalDate }}</span>
                   </span>
-                  <span class="renewal-amount">{{ entry.subscription.amount }} {{ entry.subscription.currencyCode }}</span>
+                  <span class="renewal-amount">{{ entry.amount }} {{ entry.currencyCode }}</span>
                   <span
                     class="renewal-days"
                     [class.renewal-days-urgent]="entry.daysUntil <= 3"
