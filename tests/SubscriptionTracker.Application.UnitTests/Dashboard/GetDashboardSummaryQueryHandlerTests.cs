@@ -16,6 +16,7 @@ public class GetDashboardSummaryQueryHandlerTests : IDisposable
 
     private readonly ApplicationDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
+    private readonly IExchangeRateProvider _exchangeRateProvider = Substitute.For<IExchangeRateProvider>();
     private readonly GetDashboardSummaryQueryHandler _handler;
     private readonly Guid _workspaceId = Guid.NewGuid();
 
@@ -26,7 +27,12 @@ public class GetDashboardSummaryQueryHandlerTests : IDisposable
             .Options;
         _currentUserService.WorkspaceId.Returns(_workspaceId);
         _dbContext = new ApplicationDbContext(options, _currentUserService);
-        _handler = new GetDashboardSummaryQueryHandler(_dbContext, _currentUserService, new FakeTimeProvider(Today));
+        // No Workspace entity is seeded by these tests, so the handler's DefaultCurrencyCode lookup falls back
+        // to "USD" - every test subscription below is also priced in USD, so the same-currency fast path
+        // applies and _exchangeRateProvider is never actually called; see
+        // GetBudgetsQueryHandlerTests/StaticExchangeRateProviderTests for the currency-conversion behavior itself.
+        _handler = new GetDashboardSummaryQueryHandler(
+            _dbContext, _currentUserService, _exchangeRateProvider, new FakeTimeProvider(Today));
     }
 
     private Subscription CreateSubscription(
@@ -126,6 +132,28 @@ public class GetDashboardSummaryQueryHandlerTests : IDisposable
         result.Value.SpendByFrequency.Should().HaveCount(2);
         result.Value.SpendByFrequency.First().Frequency.Should().Be(BillingFrequency.Monthly);
         result.Value.SpendByFrequency.First().Count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Handle_WithACrossCurrencySubscription_ShouldConvertItIntoTheWorkspaceDefaultCurrency()
+    {
+        var workspace = SubscriptionTracker.Domain.Tenancy.Workspace.Create(
+            "Acme", Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow, _workspaceId).Value;
+        _dbContext.Workspaces.Add(workspace); // WorkspaceSettings defaults to "USD" - see Workspace.Create
+
+        var usdSubscription = CreateSubscription("UsdSub", amount: 10m, frequency: BillingFrequency.Monthly);
+        var eurSubscription = CreateSubscription("EurSub", amount: 20m, frequency: BillingFrequency.Monthly);
+        eurSubscription.UpdatePricing(Money.Create(20m, "EUR").Value);
+        _dbContext.Subscriptions.AddRange(usdSubscription, eurSubscription);
+        await _dbContext.SaveChangesAsync();
+
+        _exchangeRateProvider.GetRate("EUR", "USD").Returns(1.1m);
+
+        var result = await _handler.Handle(new GetDashboardSummaryQuery(), CancellationToken.None);
+
+        // 10 USD/month + (20 EUR/month * 1.1 EUR->USD) ~= 32 USD, not the naive 10 + 20 = 30 a raw
+        // currency-blind sum would produce - proves conversion actually ran rather than silently mixing units.
+        result.Value.EstimatedMonthlySpend.Should().BeApproximately(32m, 0.1m);
     }
 
     [Fact]

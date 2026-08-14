@@ -14,7 +14,7 @@ public sealed class LocalFileStorageService(IOptions<FileStorageOptions> options
     {
         Directory.CreateDirectory(_rootPath);
 
-        var extension = SanitizeExtension(Path.GetExtension(originalFileName));
+        var extension = StoredFileNameSanitizer.SanitizeExtension(Path.GetExtension(originalFileName));
         var storagePath = $"{Guid.NewGuid():N}{extension}";
         var fullPath = Path.Combine(_rootPath, storagePath);
 
@@ -49,13 +49,4 @@ public sealed class LocalFileStorageService(IOptions<FileStorageOptions> options
         return Path.Combine(_rootPath, safeFileName);
     }
 
-    private static string SanitizeExtension(string extension)
-    {
-        if (string.IsNullOrEmpty(extension) || extension.Length > 10)
-        {
-            return string.Empty;
-        }
-
-        return extension.All(c => char.IsLetterOrDigit(c) || c == '.') ? extension : string.Empty;
-    }
 }

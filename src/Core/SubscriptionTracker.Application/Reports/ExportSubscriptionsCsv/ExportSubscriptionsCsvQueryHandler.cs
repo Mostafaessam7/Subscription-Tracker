@@ -77,7 +77,10 @@ public sealed class ExportSubscriptionsCsvQueryHandler(IApplicationDbContext dbC
             field = "'" + field;
         }
 
-        return field.IndexOfAny([',', '"', '\n', '\r']) >= 0
+        // Includes '\t' alongside the usual comma/quote/newline triggers: a field starting with a formula
+        // character may have just been prefixed with a leading quote above, but an embedded tab elsewhere in
+        // the field still needs quoting so it isn't mistaken for a column separator by strict CSV parsers.
+        return field.IndexOfAny([',', '"', '\n', '\r', '\t']) >= 0
             ? $"\"{field.Replace("\"", "\"\"")}\""
             : field;
     }

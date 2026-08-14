@@ -36,14 +36,17 @@ if (builder.Configuration.GetValue("ApplyMigrationsOnStartup", defaultValue: tru
     dbContext.Database.Migrate();
     await SystemRoleSeeder.SeedAsync(dbContext);
     await SystemAdminSeeder.SeedAsync(dbContext, builder.Configuration);
-
-    // Quartz's persistent job store (see Infrastructure.DependencyInjection.AddBackgroundJobs) needs its
-    // QRTZ_* tables created before the scheduler starts - EF migrations don't own this schema since it's
-    // Quartz's own, framework-agnostic table set, not one of our aggregates.
-    var connectionString = builder.Configuration.GetConnectionString("SubscriptionTrackerDb")
-        ?? throw new InvalidOperationException("ConnectionStrings:SubscriptionTrackerDb is required.");
-    await QuartzSchemaInitializer.EnsureSchemaAsync(connectionString);
 }
+
+// Deliberately outside the ApplyMigrationsOnStartup gate above: AddQuartzHostedService (see
+// Infrastructure.DependencyInjection.AddBackgroundJobs) always starts the scheduler against the persistent
+// SQL Server store regardless of that flag, so its QRTZ_* tables must always exist before app.Run() too - EF
+// migrations don't own this schema since it's Quartz's own, framework-agnostic table set, not one of our
+// aggregates. Setting ApplyMigrationsOnStartup=false (recommended for multi-replica deployments so instances
+// don't race on EF migrations) must not also skip this, or the scheduler fails schema validation at startup.
+var quartzConnectionString = builder.Configuration.GetConnectionString("SubscriptionTrackerDb")
+    ?? throw new InvalidOperationException("ConnectionStrings:SubscriptionTrackerDb is required.");
+await QuartzSchemaInitializer.EnsureSchemaAsync(quartzConnectionString);
 
 app.UseExceptionHandler();
 
