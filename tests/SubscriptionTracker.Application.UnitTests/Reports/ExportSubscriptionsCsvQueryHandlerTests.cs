@@ -88,6 +88,18 @@ public class ExportSubscriptionsCsvQueryHandlerTests : IDisposable
         csv.Should().Contain("\"Acme, Inc.\"");
     }
 
+    [Fact]
+    public async Task Handle_WithATabInProviderName_ShouldQuoteTheField()
+    {
+        _dbContext.Subscriptions.Add(CreateSubscription("Acme", "Acme\tInc."));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.Handle(new ExportSubscriptionsCsvQuery(null, null, null, null), CancellationToken.None);
+
+        var csv = Encoding.UTF8.GetString(result.Value.Content);
+        csv.Should().Contain("\"Acme\tInc.\"");
+    }
+
     [Theory]
     [InlineData("=HYPERLINK(\"http://evil.example/\",\"click me\")")]
     [InlineData("+1+1")]

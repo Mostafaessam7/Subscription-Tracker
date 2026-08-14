@@ -42,13 +42,9 @@ public sealed class GetBudgetsQueryHandler(
             // old "different currency = skip" behavior, so an unconfigured rate table is a safe no-op.
             var currentSpend = subscriptions
                 .Where(s => budget.CategoryId is null || s.CategoryId == budget.CategoryId)
-                .Sum(s =>
-                {
-                    var rate = s.CurrencyCode == budget.Amount.CurrencyCode
-                        ? 1m
-                        : exchangeRateProvider.GetRate(s.CurrencyCode, budget.Amount.CurrencyCode) ?? 0m;
-                    return rate * BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period);
-                });
+                .Sum(s => BudgetSpendCalculator.NormalizeAndConvertToPeriod(
+                    s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period,
+                    s.CurrencyCode, budget.Amount.CurrencyCode, exchangeRateProvider));
 
             var currentSpendMoney = Money.Create(currentSpend, budget.Amount.CurrencyCode);
             var hasExceeded = currentSpendMoney.IsSuccess && budget.HasExceededThreshold(currentSpendMoney.Value);

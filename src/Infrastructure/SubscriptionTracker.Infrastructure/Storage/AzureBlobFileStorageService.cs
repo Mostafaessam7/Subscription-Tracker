@@ -19,17 +19,24 @@ public sealed class AzureBlobFileStorageService : IFileStorageService
 {
     private readonly BlobContainerClient _containerClient;
 
+    // Ensures the container exists exactly once per process instead of on every SaveAsync call - this service
+    // is registered as a singleton (see DependencyInjection.AddFileStorage), so one Lazy<Task> here covers the
+    // whole app's lifetime. Lazy<Task> (not a bool flag) so concurrent first-callers all await the same
+    // in-flight creation instead of racing separate CreateIfNotExistsAsync calls.
+    private readonly Lazy<Task> _containerExists;
+
     public AzureBlobFileStorageService(IOptions<FileStorageOptions> options)
     {
         var blobOptions = options.Value.Blob;
         _containerClient = new BlobContainerClient(blobOptions.ConnectionString, blobOptions.ContainerName);
+        _containerExists = new Lazy<Task>(() => _containerClient.CreateIfNotExistsAsync());
     }
 
     public async Task<string> SaveAsync(byte[] content, string originalFileName, CancellationToken cancellationToken = default)
     {
-        await _containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+        await _containerExists.Value;
 
-        var extension = SanitizeExtension(Path.GetExtension(originalFileName));
+        var extension = StoredFileNameSanitizer.SanitizeExtension(Path.GetExtension(originalFileName));
         var blobName = $"{Guid.NewGuid():N}{extension}";
 
         var blobClient = _containerClient.GetBlobClient(blobName);
@@ -56,14 +63,4 @@ public sealed class AzureBlobFileStorageService : IFileStorageService
     // strip any path separators a corrupted/tampered value might otherwise carry, mirroring
     // LocalFileStorageService.ResolveFullPath's use of Path.GetFileName() for the same reason.
     private static string SanitizeBlobName(string storagePath) => Path.GetFileName(storagePath);
-
-    private static string SanitizeExtension(string extension)
-    {
-        if (string.IsNullOrEmpty(extension) || extension.Length > 10)
-        {
-            return string.Empty;
-        }
-
-        return extension.All(c => char.IsLetterOrDigit(c) || c == '.') ? extension : string.Empty;
-    }
 }

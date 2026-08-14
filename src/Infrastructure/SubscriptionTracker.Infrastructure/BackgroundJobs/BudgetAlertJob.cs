@@ -65,13 +65,9 @@ public sealed class BudgetAlertJob(
             var spent = subscriptions
                 .Where(s => s.WorkspaceId == budget.WorkspaceId)
                 .Where(s => budget.CategoryId is null || s.CategoryId == budget.CategoryId)
-                .Sum(s =>
-                {
-                    var rate = s.CurrencyCode == budget.Amount.CurrencyCode
-                        ? 1m
-                        : exchangeRateProvider.GetRate(s.CurrencyCode, budget.Amount.CurrencyCode) ?? 0m;
-                    return rate * BudgetSpendCalculator.NormalizeToPeriod(s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period);
-                });
+                .Sum(s => BudgetSpendCalculator.NormalizeAndConvertToPeriod(
+                    s.Amount, s.Frequency, s.CustomIntervalDays, budget.Period,
+                    s.CurrencyCode, budget.Amount.CurrencyCode, exchangeRateProvider));
 
             var spentMoney = Money.Create(spent, budget.Amount.CurrencyCode);
             if (spentMoney.IsFailure || !budget.HasExceededThreshold(spentMoney.Value))
