@@ -6,6 +6,8 @@
 .sidenav {
   width: 236px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-surface);
   border-inline-end: 1px solid var(--color-border);
   padding: 1.35rem 1rem;
@@ -40,6 +42,25 @@
     height: 1px;
     background-color: var(--color-border);
     margin: 0.6rem 0.35rem;
+  }
+
+  .sidenav-footer {
+    margin-top: auto;
+    padding: 0.85rem 0.35rem 0.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  .powered-by-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 700;
+    color: var(--color-text);
   }
 
   a {

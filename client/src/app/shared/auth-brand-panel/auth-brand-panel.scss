@@ -35,10 +35,37 @@
   text-shadow: 0 2px 12px rgb(0 0 0 / 35%);
 }
 
+.powered-by-corner {
+  position: fixed;
+  bottom: 1.5rem;
+  inset-inline-end: 2rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.72rem;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 35%);
+}
+
+.powered-by-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
 @media (max-width: 640px) {
   .brand-corner {
     top: 1.1rem;
     inset-inline-start: 1.1rem;
     font-size: 0.95rem;
+  }
+
+  .powered-by-corner {
+    bottom: 1rem;
+    inset-inline-end: 1.1rem;
+    font-size: 0.68rem;
   }
 }
