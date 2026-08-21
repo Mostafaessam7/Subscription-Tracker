@@ -49,8 +49,16 @@ export class Shell {
 
   logout(): void {
     this.notificationService.disconnect();
+    // The backend call revokes this specific refresh token server-side, but the user must be able to log out
+    // locally even if it fails (network drop, backend down, token already invalidated) - AuthService.logout()
+    // only clears local session state on success, so both branches here have to clear it explicitly, or a
+    // failed request leaves the user stuck on the same page still "logged in" with no visible error.
     this.authService.logout().subscribe({
       complete: () => this.router.navigateByUrl('/auth/login'),
+      error: () => {
+        this.authService.clearSession();
+        this.router.navigateByUrl('/auth/login');
+      },
     });
   }
 
