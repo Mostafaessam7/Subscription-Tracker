@@ -27,6 +27,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting(DependencyInjection.AuthRegisterPolicy)]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
         var command = new RegisterUserCommand(request.Email, request.Password, request.FirstName, request.LastName, request.WorkspaceName);
@@ -36,6 +37,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting(DependencyInjection.AuthLoginPolicy)]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
