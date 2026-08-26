@@ -30,4 +30,41 @@ public class RateLimitingTests : IClassFixture<ApiWebApplicationFactory>
 
         lastResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
     }
+
+    [Fact]
+    public async Task Login_BeyondTheAuthLoginLimit_ShouldReturnTooManyRequests()
+    {
+        HttpResponseMessage? lastResponse = null;
+
+        // The auth-login policy permits 30 requests per 1-minute window; the 31st must be rejected. Deliberately
+        // a wrong-password guess against a nonexistent account (401, not 429) below the limit, then push past it -
+        // proves the throttle applies before any single account could ever hit its own 5-attempt lockout.
+        for (var i = 0; i < 31; i++)
+        {
+            lastResponse = await _client.PostAsJsonAsync(
+                "/api/v1/auth/login", new { email = $"probe{i}@example.com", password = "wrong-password" });
+        }
+
+        lastResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+    }
+
+    [Fact]
+    public async Task Register_BeyondTheAuthRegisterLimit_ShouldReturnTooManyRequests()
+    {
+        HttpResponseMessage? lastResponse = null;
+
+        // The auth-register policy permits 30 requests per 1-minute window; the 31st must be rejected.
+        for (var i = 0; i < 31; i++)
+        {
+            lastResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+            {
+                email = $"probe{i}-{Guid.NewGuid():N}@example.com",
+                password = "Str0ngPass!123",
+                firstName = "Probe",
+                lastName = "User",
+            });
+        }
+
+        lastResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+    }
 }

@@ -152,6 +152,28 @@ public static class DependencyInjection
     /// <see cref="Controllers.V1.AuthController"/> for the <c>[EnableRateLimiting]</c> attributes that use it.</summary>
     public const string AuthSensitivePolicy = "auth-sensitive";
 
+    /// <summary>Named policy applied to login - a credential-stuffing attacker's primary target, and one the
+    /// 100-req/min *global* limiter (partitioned across all API traffic, not just auth) leaves far too much
+    /// headroom for: the per-account lockout (5 failed attempts/15 min, see <c>User.RecordFailedLogin</c>) only
+    /// helps once an attacker has already guessed a valid email, so it does nothing against credential stuffing
+    /// across many different accounts from one IP. Deliberately a separate, more generous policy than
+    /// <see cref="AuthSensitivePolicy"/> (a 1-minute window, not 15, and a higher permit count) rather than
+    /// reusing it outright - a strict 5-per-15-minutes budget is appropriate for endpoints that only ever fire
+    /// on a deliberate, rare user action (forgot password), but login is routine, high-frequency traffic (every
+    /// page load after a token expires, every integration test that authenticates via <c>TestAuthHelper</c>),
+    /// and a login failure isn't necessarily an attack the way a forgot-password enumeration probe is. Kept as
+    /// its own policy separate from <see cref="AuthRegisterPolicy"/> (rather than one shared "auth-throttle"
+    /// bucket) specifically so a burst of one doesn't eat into the other's budget - `TestAuthHelper` calls both
+    /// on every authenticated integration test, and a shared bucket needed a much higher limit to avoid 429s
+    /// mid-test-run purely from that combined volume, which would have diluted the protection on each
+    /// individually.</summary>
+    public const string AuthLoginPolicy = "auth-login";
+
+    /// <summary>Named policy applied to registration - throttles mass fake-account creation the same way
+    /// <see cref="AuthLoginPolicy"/> throttles credential stuffing. See that constant's remarks for why this
+    /// is a separate bucket rather than shared with login.</summary>
+    public const string AuthRegisterPolicy = "auth-register";
+
     private static void AddRateLimiting(IServiceCollection services)
     {
         services.AddRateLimiter(options =>
@@ -175,6 +197,26 @@ public static class DependencyInjection
                     {
                         PermitLimit = 5,
                         Window = TimeSpan.FromMinutes(15),
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(AuthLoginPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(AuthRegisterPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0,
                     }));
         });
