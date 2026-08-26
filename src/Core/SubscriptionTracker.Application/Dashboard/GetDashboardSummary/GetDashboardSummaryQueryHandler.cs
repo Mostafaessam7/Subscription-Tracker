@@ -16,6 +16,14 @@ namespace SubscriptionTracker.Application.Dashboard.GetDashboardSummary;
 /// the "estimated monthly spend" figure is computed the same way everywhere in the app, including converting
 /// cross-currency subscriptions into the workspace's default currency via IExchangeRateProvider rather than
 /// summing raw amounts across currencies as if they were interchangeable.
+///
+/// Only ever pulls the subscriptions this handler actually needs row-by-row in .NET (the Active/Trial ones,
+/// for the currency-conversion sum and the frequency breakdown - conversion isn't SQL-translatable since
+/// IExchangeRateProvider's rate table lives in config, not the database). Everything that a plain SQL
+/// aggregate can answer - the total count, and the "next 5 upcoming" list - is computed by EF Core as
+/// COUNT/ORDER BY/TOP directly against the database instead of first materializing every row, so a workspace
+/// with a large history of cancelled/expired subscriptions doesn't pay to load all of them on every dashboard
+/// view (originally this loaded literally every subscription in the workspace, unconditionally).
 /// </summary>
 public sealed class GetDashboardSummaryQueryHandler(
     IApplicationDbContext dbContext,
@@ -30,20 +38,9 @@ public sealed class GetDashboardSummaryQueryHandler(
 
     public async Task<Result<DashboardSummaryDto>> Handle(GetDashboardSummaryQuery request, CancellationToken cancellationToken)
     {
-        var subscriptions = await dbContext.Subscriptions
-            .Where(s => s.WorkspaceId == currentUserService.WorkspaceId)
-            .Select(s => new
-            {
-                s.Id,
-                s.Name,
-                s.Status,
-                s.NextRenewalDate,
-                Amount = s.Price.Amount,
-                CurrencyCode = s.Price.CurrencyCode,
-                Frequency = s.BillingCycle.Frequency,
-                s.BillingCycle.CustomIntervalDays,
-            })
-            .ToListAsync(cancellationToken);
+        var workspaceSubscriptions = dbContext.Subscriptions.Where(s => s.WorkspaceId == currentUserService.WorkspaceId);
+
+        var totalCount = await workspaceSubscriptions.CountAsync(cancellationToken);
 
         var targetCurrencyCode = await dbContext.Workspaces
             .Where(w => w.Id == currentUserService.WorkspaceId)
@@ -60,23 +57,31 @@ public sealed class GetDashboardSummaryQueryHandler(
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         var windowEnd = today.AddDays(UpcomingRenewalWindowDays);
 
-        var statusCounts = subscriptions
-            .Where(s => s.Status is SubscriptionStatus.Active or SubscriptionStatus.Trial)
-            .GroupBy(s => s.Status)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        var billableSubscriptions = statusCounts.Values.SelectMany(g => g).ToList();
+        // Only the Active/Trial rows are ever billable, so this is the one set that has to be materialized
+        // for the in-memory currency conversion + frequency grouping below - still a real reduction over
+        // loading cancelled/expired/paused subscriptions too, which contribute to neither KPI.
+        var billableSubscriptions = await workspaceSubscriptions
+            .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial)
+            .Select(s => new
+            {
+                s.Status,
+                Amount = s.Price.Amount,
+                CurrencyCode = s.Price.CurrencyCode,
+                Frequency = s.BillingCycle.Frequency,
+                s.BillingCycle.CustomIntervalDays,
+            })
+            .ToListAsync(cancellationToken);
 
         var estimatedMonthlySpend = billableSubscriptions.Sum(s => BudgetSpendCalculator.NormalizeAndConvertToPeriod(
             s.Amount, s.Frequency, s.CustomIntervalDays, BudgetPeriod.Monthly, s.CurrencyCode, targetCurrencyCode, exchangeRateProvider));
 
-        var upcomingRenewals = subscriptions
-            .Where(s => s.NextRenewalDate is not null && s.NextRenewalDate >= today && s.NextRenewalDate <= windowEnd)
+        var upcomingRenewals = await workspaceSubscriptions
+            .Where(s => (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial)
+                && s.NextRenewalDate != null && s.NextRenewalDate >= today && s.NextRenewalDate <= windowEnd)
             .OrderBy(s => s.NextRenewalDate)
             .Take(UpcomingRenewalListSize)
-            .Select(s => new UpcomingRenewalDto(
-                s.Id, s.Name, s.Amount, s.CurrencyCode, s.NextRenewalDate!.Value, s.NextRenewalDate!.Value.DayNumber - today.DayNumber))
-            .ToList();
+            .Select(s => new { s.Id, s.Name, Amount = s.Price.Amount, CurrencyCode = s.Price.CurrencyCode, s.NextRenewalDate })
+            .ToListAsync(cancellationToken);
 
         var spendByFrequency = billableSubscriptions
             .GroupBy(s => s.Frequency)
@@ -85,11 +90,13 @@ public sealed class GetDashboardSummaryQueryHandler(
             .ToList();
 
         var summary = new DashboardSummaryDto(
-            TotalSubscriptions: subscriptions.Count,
-            ActiveCount: statusCounts.GetValueOrDefault(SubscriptionStatus.Active)?.Count ?? 0,
-            TrialCount: statusCounts.GetValueOrDefault(SubscriptionStatus.Trial)?.Count ?? 0,
+            TotalSubscriptions: totalCount,
+            ActiveCount: billableSubscriptions.Count(s => s.Status == SubscriptionStatus.Active),
+            TrialCount: billableSubscriptions.Count(s => s.Status == SubscriptionStatus.Trial),
             EstimatedMonthlySpend: estimatedMonthlySpend,
-            UpcomingRenewals: upcomingRenewals,
+            UpcomingRenewals: upcomingRenewals
+                .Select(s => new UpcomingRenewalDto(s.Id, s.Name, s.Amount, s.CurrencyCode, s.NextRenewalDate!.Value, s.NextRenewalDate!.Value.DayNumber - today.DayNumber))
+                .ToList(),
             SpendByFrequency: spendByFrequency);
 
         return Result.Success(summary);

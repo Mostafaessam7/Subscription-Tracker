@@ -66,7 +66,13 @@ public sealed class LoginCommandHandler(
                     Error.Validation("Login.TwoFactorRequired", "A verification code is required to complete sign-in."));
             }
 
-            if (!twoFactorService.ValidateCode(user.TwoFactorSecret!, request.TotpCode))
+            // A TOTP code is always 6 digits; anything else (e.g. "WXYZ2-3456") can only be a recovery code,
+            // so only pay the PBKDF2-per-candidate cost of TryConsumeRecoveryCode on that path, not on every
+            // ordinary TOTP login.
+            var isValidTotpCode = twoFactorService.ValidateCode(user.TwoFactorSecret!, request.TotpCode);
+            var isValidRecoveryCode = !isValidTotpCode && TryConsumeRecoveryCode(user, request.TotpCode);
+
+            if (!isValidTotpCode && !isValidRecoveryCode)
             {
                 user.RecordFailedLogin(now);
                 userRepository.Update(user);
@@ -95,5 +101,23 @@ public sealed class LoginCommandHandler(
         userRepository.Update(user);
 
         return new LoginResponse(user.Id, accessToken.Token, accessToken.ExpiresAtUtc, rawRefreshToken, primaryWorkspace?.Id);
+    }
+
+    /// <summary>
+    /// Checks <paramref name="candidate"/> against every still-unused recovery code hash and consumes the
+    /// first match. Recovery codes are single-use by design (unlike a TOTP code, which is naturally one-time
+    /// via the moving time step) - a match must be spent immediately or it could be replayed.
+    /// </summary>
+    private bool TryConsumeRecoveryCode(User user, string candidate)
+    {
+        foreach (var recoveryCode in user.RecoveryCodes.Where(c => !c.IsUsed))
+        {
+            if (passwordHasher.Verify(candidate, recoveryCode.CodeHash))
+            {
+                return user.ConsumeRecoveryCode(recoveryCode.Id).IsSuccess;
+            }
+        }
+
+        return false;
     }
 }

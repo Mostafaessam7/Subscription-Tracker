@@ -10,6 +10,10 @@ export interface SetupTwoFactorResponse {
   provisioningUri: string;
 }
 
+export interface EnableTwoFactorResponse {
+  recoveryCodes: string[];
+}
+
 export interface CurrentUser {
   id: string;
   email: string;

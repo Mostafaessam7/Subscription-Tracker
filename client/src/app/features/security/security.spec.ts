@@ -22,7 +22,7 @@ function createSecurity(overrides: Partial<Record<string, ReturnType<typeof vi.f
           getCurrentUser: vi.fn().mockReturnValue(of(fakeUser())),
           getSessions: vi.fn().mockReturnValue(of([])),
           setupTwoFactor: vi.fn().mockReturnValue(of({ secret: 'SECRET', provisioningUri: 'otpauth://x' })),
-          enableTwoFactor: vi.fn().mockReturnValue(of(undefined)),
+          enableTwoFactor: vi.fn().mockReturnValue(of({ recoveryCodes: ['AAAAA-11111', 'BBBBB-22222'] })),
           disableTwoFactor: vi.fn().mockReturnValue(of(undefined)),
           revokeSession: vi.fn().mockReturnValue(of(undefined)),
           ...overrides,
@@ -94,7 +94,7 @@ describe('Security', () => {
     });
 
     it('enables two-factor with the setup secret and entered code, then reloads', () => {
-      const enableTwoFactor = vi.fn().mockReturnValue(of(undefined));
+      const enableTwoFactor = vi.fn().mockReturnValue(of({ recoveryCodes: [] }));
       const security = createSecurity({ enableTwoFactor });
       security.startSetup();
 
@@ -104,6 +104,21 @@ describe('Security', () => {
       expect(enableTwoFactor).toHaveBeenCalledWith('SECRET', '654321');
       expect(security.successMessage()).toBe('security.twoFactor.enabled');
       expect(security.setupInfo()).toBeNull();
+    });
+
+    it('stores the recovery codes returned once by the server, and clears them on acknowledge', () => {
+      const enableTwoFactor = vi.fn().mockReturnValue(of({ recoveryCodes: ['AAAAA-11111', 'BBBBB-22222'] }));
+      const security = createSecurity({ enableTwoFactor });
+      security.startSetup();
+      security.enableForm.controls.code.setValue('654321');
+
+      security.confirmEnable();
+
+      expect(security.recoveryCodes()).toEqual(['AAAAA-11111', 'BBBBB-22222']);
+
+      security.acknowledgeRecoveryCodes();
+
+      expect(security.recoveryCodes()).toBeNull();
     });
 
     it('maps a 400 enable response to an invalid-code message, other errors to the generic one', () => {

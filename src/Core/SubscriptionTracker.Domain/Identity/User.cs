@@ -11,6 +11,7 @@ public sealed class User : AuditableAggregateRoot<Guid>
 
     private readonly List<RefreshToken> _refreshTokens = [];
     private readonly List<VerificationToken> _verificationTokens = [];
+    private readonly List<TwoFactorRecoveryCode> _recoveryCodes = [];
 
     private User(Guid id, Email email, string passwordHash, string firstName, string lastName)
         : base(id)
@@ -42,6 +43,7 @@ public sealed class User : AuditableAggregateRoot<Guid>
 
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
     public IReadOnlyCollection<VerificationToken> VerificationTokens => _verificationTokens.AsReadOnly();
+    public IReadOnlyCollection<TwoFactorRecoveryCode> RecoveryCodes => _recoveryCodes.AsReadOnly();
 
     public bool IsLockedOut => LockedUntilUtc is not null && LockedUntilUtc > DateTimeOffset.UtcNow;
 
@@ -143,6 +145,34 @@ public sealed class User : AuditableAggregateRoot<Guid>
     {
         TwoFactorEnabled = false;
         TwoFactorSecret = null;
+        _recoveryCodes.Clear();
+    }
+
+    /// <summary>
+    /// Replaces the entire recovery-code set (called once per successful <see cref="EnableTwoFactor"/> -
+    /// re-enabling 2FA after a disable/re-enable cycle invalidates any codes issued previously, same as
+    /// re-running the TOTP setup invalidates the old secret).
+    /// </summary>
+    public void ReplaceRecoveryCodes(IEnumerable<string> codeHashes)
+    {
+        _recoveryCodes.Clear();
+        foreach (var hash in codeHashes)
+        {
+            _recoveryCodes.Add(TwoFactorRecoveryCode.Issue(Id, hash));
+        }
+    }
+
+    /// <summary>Marks one still-unused recovery code as spent. The caller has already matched it by hash.</summary>
+    public Result ConsumeRecoveryCode(Guid recoveryCodeId)
+    {
+        var code = _recoveryCodes.FirstOrDefault(c => c.Id == recoveryCodeId);
+        if (code is null || code.IsUsed)
+        {
+            return Result.Failure(Error.NotFound("User.RecoveryCodeNotFound", "Recovery code was not found or has already been used."));
+        }
+
+        code.MarkUsed();
+        return Result.Success();
     }
 
     public RefreshToken IssueRefreshToken(string tokenHash, DateTimeOffset expiresAtUtc, string? createdByIp)

@@ -57,9 +57,9 @@ public sealed class AdminController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Fires one of the daily Quartz jobs (renewal-reminder, auto-renewal,
-    /// expire-subscriptions, budget-alert) immediately instead of waiting for its cron schedule -
-    /// mainly useful for verifying the in-app/email notification paths on demand.</summary>
+    /// <summary>Fires one of the scheduled Quartz jobs (renewal-reminder, auto-renewal,
+    /// expire-subscriptions, budget-alert, purge-soft-deleted) immediately instead of waiting for its cron
+    /// schedule - mainly useful for verifying the in-app/email notification paths on demand.</summary>
     [HttpPost("jobs/{jobName}/trigger")]
     public async Task<IActionResult> TriggerJob(string jobName, CancellationToken cancellationToken)
     {

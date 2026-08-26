@@ -18,6 +18,11 @@ public sealed class TotpService(TimeProvider timeProvider) : ITwoFactorService
     private const int CodeDigits = 6;
     private static readonly TimeSpan TimeStep = TimeSpan.FromSeconds(30);
 
+    // Crockford-style alphabet: no 0/O, 1/I/L, or other easily-confused characters - these get hand-copied
+    // or read aloud by a locked-out user, unlike the TOTP secret which only ever gets scanned as a QR code.
+    private const string RecoveryCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    private const int RecoveryCodeGroupLength = 5;
+
     public string GenerateSecret()
     {
         var secretBytes = RandomNumberGenerator.GetBytes(SecretLengthBytes);
@@ -51,6 +56,30 @@ public sealed class TotpService(TimeProvider timeProvider) : ITwoFactorService
         }
 
         return false;
+    }
+
+    public IReadOnlyList<string> GenerateRecoveryCodes(int count)
+    {
+        var codes = new List<string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var groupA = RandomAlphabetString(RecoveryCodeGroupLength);
+            var groupB = RandomAlphabetString(RecoveryCodeGroupLength);
+            codes.Add($"{groupA}-{groupB}");
+        }
+
+        return codes;
+    }
+
+    private static string RandomAlphabetString(int length)
+    {
+        var chars = new char[length];
+        for (var i = 0; i < length; i++)
+        {
+            chars[i] = RecoveryCodeAlphabet[RandomNumberGenerator.GetInt32(RecoveryCodeAlphabet.Length)];
+        }
+
+        return new string(chars);
     }
 
     private long GetCurrentTimeStep() => timeProvider.GetUtcNow().ToUnixTimeSeconds() / (long)TimeStep.TotalSeconds;

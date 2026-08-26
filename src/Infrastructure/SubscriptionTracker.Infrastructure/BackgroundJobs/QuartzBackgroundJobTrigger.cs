@@ -9,7 +9,7 @@ namespace SubscriptionTracker.Infrastructure.BackgroundJobs;
 public sealed class QuartzBackgroundJobTrigger(ISchedulerFactory schedulerFactory) : IBackgroundJobTrigger
 {
     public IReadOnlyCollection<string> JobNames { get; } =
-        ["renewal-reminder", "auto-renewal", "expire-subscriptions", "budget-alert"];
+        ["renewal-reminder", "auto-renewal", "expire-subscriptions", "budget-alert", "purge-soft-deleted"];
 
     public async Task<bool> TriggerAsync(string jobName, CancellationToken cancellationToken)
     {
