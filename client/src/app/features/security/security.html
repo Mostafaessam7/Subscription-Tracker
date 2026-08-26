@@ -24,7 +24,17 @@
         {{ 'security.twoFactor.title' | translate }}
       </h2>
 
-      @if (user.twoFactorEnabled) {
+      @if (recoveryCodes(); as codes) {
+        <p class="form-error" role="alert">{{ 'security.twoFactor.recoveryCodesWarning' | translate }}</p>
+        <ul class="recovery-code-list">
+          @for (code of codes; track code) {
+            <li class="recovery-code">{{ code }}</li>
+          }
+        </ul>
+        <button type="button" class="primary-button" (click)="acknowledgeRecoveryCodes()">
+          {{ 'security.twoFactor.recoveryCodesAcknowledge' | translate }}
+        </button>
+      } @else if (user.twoFactorEnabled) {
         <p class="status-line">
           <span class="status-dot enabled"></span>
           {{ 'security.twoFactor.currentlyEnabled' | translate }}

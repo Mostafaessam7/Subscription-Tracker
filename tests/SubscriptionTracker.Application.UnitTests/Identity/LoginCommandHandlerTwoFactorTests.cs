@@ -96,4 +96,43 @@ public class LoginCommandHandlerTwoFactorTests
         result.IsSuccess.Should().BeTrue();
         user.FailedLoginAttempts.Should().Be(0);
     }
+
+    [Fact]
+    public async Task Handle_WithValidUnusedRecoveryCode_ShouldSucceedAndConsumeIt()
+    {
+        var user = CreateUserWithTwoFactorEnabled(out _);
+        user.ReplaceRecoveryCodes(["hashed-code-1", "hashed-code-2"]);
+        // Only the second hash matches the raw code being submitted - proves the handler tries every unused
+        // code rather than assuming the first one is the right one.
+        _passwordHasher.Verify("WXYZ2-3456", "hashed-code-1").Returns(false);
+        _passwordHasher.Verify("WXYZ2-3456", "hashed-code-2").Returns(true);
+        _jwtTokenService.GenerateAccessToken(user, Arg.Any<Guid?>(), Arg.Any<IReadOnlyCollection<string>>())
+            .Returns(new AccessTokenResult("token", DateTimeOffset.UtcNow.AddMinutes(15)));
+        _jwtTokenService.GenerateRefreshToken().Returns("raw-refresh-token");
+        _jwtTokenService.HashRefreshToken("raw-refresh-token").Returns("hashed");
+
+        var result = await _handler.Handle(
+            new LoginCommand("jane@example.com", "correct-password", "127.0.0.1", "WXYZ2-3456"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        user.FailedLoginAttempts.Should().Be(0);
+        user.RecoveryCodes.Single(c => c.CodeHash == "hashed-code-2").IsUsed.Should().BeTrue();
+        user.RecoveryCodes.Single(c => c.CodeHash == "hashed-code-1").IsUsed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_WithAlreadyUsedRecoveryCode_ShouldFailAndRecordFailedLogin()
+    {
+        var user = CreateUserWithTwoFactorEnabled(out _);
+        user.ReplaceRecoveryCodes(["hashed-code-1"]);
+        user.ConsumeRecoveryCode(user.RecoveryCodes.Single().Id);
+        _passwordHasher.Verify("WXYZ2-3456", "hashed-code-1").Returns(true);
+
+        var result = await _handler.Handle(
+            new LoginCommand("jane@example.com", "correct-password", "127.0.0.1", "WXYZ2-3456"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Login.InvalidTwoFactorCode");
+        user.FailedLoginAttempts.Should().Be(1);
+    }
 }

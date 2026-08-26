@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CurrentUser, Session, SetupTwoFactorResponse } from '../models/security.models';
+import { CurrentUser, EnableTwoFactorResponse, Session, SetupTwoFactorResponse } from '../models/security.models';
 
 @Injectable({ providedIn: 'root' })
 export class SecurityService {
@@ -24,8 +24,8 @@ export class SecurityService {
     return this.http.get<SetupTwoFactorResponse>(`${environment.apiBaseUrl}/auth/2fa/setup`);
   }
 
-  enableTwoFactor(secret: string, code: string): Observable<void> {
-    return this.http.post<void>(`${environment.apiBaseUrl}/auth/2fa/enable`, { secret, code });
+  enableTwoFactor(secret: string, code: string): Observable<EnableTwoFactorResponse> {
+    return this.http.post<EnableTwoFactorResponse>(`${environment.apiBaseUrl}/auth/2fa/enable`, { secret, code });
   }
 
   disableTwoFactor(code: string): Observable<void> {

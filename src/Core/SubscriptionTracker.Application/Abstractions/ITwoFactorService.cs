@@ -11,4 +11,11 @@ public interface ITwoFactorService
 
     /// <summary>Validates a 6-digit code against the secret, tolerating +/-1 time step of clock drift.</summary>
     bool ValidateCode(string secret, string code);
+
+    /// <summary>
+    /// Generates <paramref name="count"/> random, human-typeable single-use backup codes (e.g. "WXYZ-2345").
+    /// Callers must hash each one (the same way a password is hashed) before persisting - these are returned
+    /// once, in the clear, purely so the user can save/print them.
+    /// </summary>
+    IReadOnlyList<string> GenerateRecoveryCodes(int count);
 }

@@ -27,7 +27,8 @@
     @if (requiresTwoFactor()) {
       <label class="field">
         <span>{{ 'auth.login.twoFactorCode' | translate }}</span>
-        <input type="text" formControlName="totpCode" maxlength="6" autocomplete="one-time-code" />
+        <input type="text" formControlName="totpCode" maxlength="11" autocomplete="one-time-code" />
+        <small class="field-hint">{{ 'auth.login.twoFactorCodeHint' | translate }}</small>
       </label>
     }
 

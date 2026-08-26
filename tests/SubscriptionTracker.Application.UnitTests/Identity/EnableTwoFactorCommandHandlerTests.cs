@@ -14,12 +14,14 @@ public class EnableTwoFactorCommandHandlerTests
     private readonly IRepository<User, Guid> _userRepository = Substitute.For<IRepository<User, Guid>>();
     private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly TotpService _twoFactorService = new(TimeProvider.System);
+    private readonly IPasswordHasher _passwordHasher = Substitute.For<IPasswordHasher>();
 
     private readonly EnableTwoFactorCommandHandler _handler;
 
     public EnableTwoFactorCommandHandlerTests()
     {
-        _handler = new EnableTwoFactorCommandHandler(_userRepository, _currentUserService, _twoFactorService);
+        _passwordHasher.Hash(Arg.Any<string>()).Returns(callInfo => $"hashed:{callInfo.Arg<string>()}");
+        _handler = new EnableTwoFactorCommandHandler(_userRepository, _currentUserService, _twoFactorService, _passwordHasher);
     }
 
     private static User CreateUser() => User.Register(Email.Create("jane@example.com").Value, "hash", "Jane", "Doe").Value;
@@ -40,6 +42,11 @@ public class EnableTwoFactorCommandHandlerTests
         user.TwoFactorEnabled.Should().BeTrue();
         user.TwoFactorSecret.Should().Be(secret);
         _userRepository.Received(1).Update(user);
+
+        result.Value.RecoveryCodes.Should().HaveCount(10);
+        result.Value.RecoveryCodes.Should().OnlyHaveUniqueItems();
+        user.RecoveryCodes.Should().HaveCount(10);
+        user.RecoveryCodes.Should().OnlyContain(c => !c.IsUsed);
     }
 
     [Fact]

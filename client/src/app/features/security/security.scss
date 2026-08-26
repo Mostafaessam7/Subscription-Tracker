@@ -91,6 +91,26 @@
   word-break: break-all;
 }
 
+.recovery-code-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.recovery-code {
+  font-family: monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.05rem;
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  text-align: center;
+}
+
 .inline-form {
   display: flex;
   flex-wrap: wrap;

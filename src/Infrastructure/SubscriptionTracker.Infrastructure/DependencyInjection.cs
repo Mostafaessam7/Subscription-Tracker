@@ -112,6 +112,16 @@ public static class DependencyInjection
             AddDailyJob<AutoRenewalJob>(quartz, "auto-renewal", "0 15 6 * * ?");
             AddDailyJob<ExpireSubscriptionsJob>(quartz, "expire-subscriptions", "0 30 6 * * ?");
             AddDailyJob<BudgetAlertJob>(quartz, "budget-alert", "0 45 6 * * ?");
+
+            // Weekly, not daily like the others - purging is cheap to run rarely and there's no reason to hit
+            // the database with a bulk-delete sweep every single day for data that only becomes eligible once
+            // it's already 90+ days old.
+            var purgeJobKey = new JobKey("purge-soft-deleted");
+            quartz.AddJob<PurgeSoftDeletedRecordsJob>(opts => opts.WithIdentity(purgeJobKey));
+            quartz.AddTrigger(opts => opts
+                .ForJob(purgeJobKey)
+                .WithIdentity("purge-soft-deleted-trigger")
+                .WithCronSchedule("0 0 7 ? * SUN"));
         });
 
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);

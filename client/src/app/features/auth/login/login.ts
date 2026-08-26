@@ -18,6 +18,11 @@ export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  // A TOTP code is always 6 digits; a recovery code (see security.ts) is two 5-character groups separated by
+  // a dash, e.g. "WXYZ2-3456" - either is accepted here, matching what LoginCommandHandler tries server-side.
+  private static readonly totpPattern = /^\d{6}$/;
+  private static readonly recoveryCodePattern = /^[A-Za-z2-9]{5}-[A-Za-z2-9]{5}$/;
+
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly requiresTwoFactor = signal(false);
@@ -36,10 +41,12 @@ export class Login {
       return;
     }
 
-    if (isTotpStep && !/^\d{6}$/.test(this.form.controls.totpCode.value)) {
+    const totpCode = this.form.controls.totpCode.value.trim();
+    if (isTotpStep && !Login.totpPattern.test(totpCode) && !Login.recoveryCodePattern.test(totpCode)) {
       this.form.controls.totpCode.markAsTouched();
       return;
     }
+    this.form.controls.totpCode.setValue(totpCode);
 
     this.isSubmitting.set(true);
     this.errorMessage.set(null);

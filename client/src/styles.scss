@@ -303,6 +303,10 @@ button {
   color: var(--color-danger);
 }
 
+.field-hint {
+  color: var(--color-text-muted);
+}
+
 input:not(.field input),
 select:not(.field select),
 textarea:not(.field textarea) {

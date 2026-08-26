@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using SubscriptionTracker.Application.Abstractions;
 using SubscriptionTracker.Application.Common.Messaging;
 using SubscriptionTracker.Domain.Common;
@@ -12,7 +13,8 @@ public sealed class RefreshTokenCommandHandler(
     IRepository<Workspace, Guid> workspaceRepository,
     IRepository<Role, Guid> roleRepository,
     IJwtTokenService jwtTokenService,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<RefreshTokenCommandHandler> logger)
     : ICommandHandler<RefreshTokenCommand, RefreshTokenResponse>
 {
     private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(30);
@@ -29,7 +31,25 @@ public sealed class RefreshTokenCommandHandler(
         }
 
         var existingToken = user.RefreshTokens.First(t => t.TokenHash == tokenHash);
-        if (!existingToken.IsActive)
+
+        // Reuse of an already-revoked token is a stronger signal than "just expired": every refresh rotates
+        // the token (revokes the old one, issues a new one), so the only way a *revoked* token gets presented
+        // again is either a client retrying a stale value it should have discarded, or someone else replaying
+        // a token they captured before its legitimate rotation. Treat it as a possible theft and burn the
+        // whole session family - the OWASP-recommended response for rotation-based refresh tokens - rather
+        // than silently rejecting just this one request and leaving every other still-active token (including
+        // one an attacker may already hold) untouched.
+        if (existingToken.IsRevoked)
+        {
+            logger.LogWarning(
+                "Revoked refresh token replayed for user {UserId} from {IpAddress} - revoking all active refresh tokens for this account as a precaution.",
+                user.Id, request.IpAddress);
+            user.RevokeAllRefreshTokens(request.IpAddress);
+            userRepository.Update(user);
+            return Result.Failure<RefreshTokenResponse>(InvalidTokenError);
+        }
+
+        if (existingToken.IsExpired)
         {
             return Result.Failure<RefreshTokenResponse>(InvalidTokenError);
         }

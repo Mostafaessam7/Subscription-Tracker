@@ -20,6 +20,7 @@ export class Security implements OnInit {
   readonly currentUser = signal<CurrentUser | null>(null);
   readonly sessions = signal<Session[]>([]);
   readonly setupInfo = signal<SetupTwoFactorResponse | null>(null);
+  readonly recoveryCodes = signal<string[] | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly isLoading = signal(true);
@@ -74,11 +75,14 @@ export class Security implements OnInit {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
     this.securityService.enableTwoFactor(this.setupInfo()!.secret, this.enableForm.getRawValue().code).subscribe({
-      next: () => {
+      next: (response) => {
         this.isSubmitting.set(false);
         this.setupInfo.set(null);
         this.enableForm.reset({ code: '' });
         this.successMessage.set('security.twoFactor.enabled');
+        // Shown once, here - the backend never returns these again after this call, so the user must save
+        // them now (or lose the ability to recover the account if their authenticator device is ever lost).
+        this.recoveryCodes.set(response.recoveryCodes);
         this.reload();
       },
       error: (error: unknown) => {
@@ -88,6 +92,10 @@ export class Security implements OnInit {
         );
       },
     });
+  }
+
+  acknowledgeRecoveryCodes(): void {
+    this.recoveryCodes.set(null);
   }
 
   confirmDisable(): void {
