@@ -2,7 +2,9 @@
 
 Angular 22 frontend for the Subscription Tracker SaaS (standalone components, signals-based state). See the
 [repo-root README](../README.md) for the overall project, and [HANDOVER.md](../HANDOVER.md) for deep architectural
-detail.
+detail — including a note that this whole `2-Subscription Tracker` copy is an earlier/parallel iteration relative to
+`D:\Projects\3-Subscription Tracker`'s `subscription-tracker-app/` frontend, which has since moved to a newer
+Angular baseline and Playwright E2E coverage.
 
 ## Development server
 
