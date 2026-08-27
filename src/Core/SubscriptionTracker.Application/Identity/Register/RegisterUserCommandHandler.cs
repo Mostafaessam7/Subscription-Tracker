@@ -33,8 +33,16 @@ public sealed class RegisterUserCommandHandler(
         var existingUser = await userRepository.FirstOrDefaultAsync(new UserByEmailSpecification(emailResult.Value), cancellationToken);
         if (existingUser is not null)
         {
-            return Result.Failure<RegisterUserResponse>(
-                Error.Conflict("Register.EmailAlreadyExists", "An account with this email already exists."));
+            // Non-enumerable, same principle as ForgotPasswordCommandHandler: revealing "this email is already
+            // registered" via a distinct 409 lets anyone probe which emails have accounts. Report the exact same
+            // success shape as a real registration (the frontend never reads RegisterUserResponse's fields - it
+            // only checks for success and shows a generic "check your email" message) without actually creating
+            // a duplicate account, and let the real owner know via email instead of leaving them silently
+            // confused about a verification email that will never arrive. Fresh random Guids, not Guid.Empty -
+            // an all-zero id would itself be a distinguishable signal to anyone comparing response bodies across
+            // repeated probes, which would quietly defeat the entire point of this branch.
+            await emailSender.SendDuplicateRegistrationAttemptAsync(existingUser.Email.Value, existingUser.FullName, cancellationToken);
+            return new RegisterUserResponse(Guid.NewGuid(), Guid.NewGuid());
         }
 
         var passwordHash = passwordHasher.Hash(request.Password);

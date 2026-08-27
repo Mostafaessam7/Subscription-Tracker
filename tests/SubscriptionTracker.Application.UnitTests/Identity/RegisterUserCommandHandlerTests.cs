@@ -50,8 +50,12 @@ public class RegisterUserCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithExistingEmail_ShouldFailWithConflict()
+    public async Task Handle_WithExistingEmail_ShouldSucceedWithoutCreatingADuplicateAccountAndNotifyTheOwner()
     {
+        // Non-enumerable, same principle as ForgotPasswordCommandHandler: the API must not reveal whether an
+        // email is already registered via a distinct error, so this reports the same success shape a real
+        // registration would - no new User/Role/Workspace is created, and the existing account owner is
+        // emailed instead so they aren't left confused by a verification email that never arrives.
         var existingUser = User.Register(
             Domain.Common.ValueObjects.Email.Create("jane@example.com").Value, "hash", "Jane", "Doe").Value;
 
@@ -60,9 +64,14 @@ public class RegisterUserCommandHandlerTests
 
         var result = await _handler.Handle(ValidCommand(), CancellationToken.None);
 
-        result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Register.EmailAlreadyExists");
+        result.IsSuccess.Should().BeTrue();
         _userRepository.DidNotReceive().Add(Arg.Any<User>());
+        _roleRepository.DidNotReceive().Add(Arg.Any<Role>());
+        _workspaceRepository.DidNotReceive().Add(Arg.Any<Workspace>());
+        await _emailSender.Received(1).SendDuplicateRegistrationAttemptAsync(
+            "jane@example.com", "Jane Doe", Arg.Any<CancellationToken>());
+        await _emailSender.DidNotReceive().SendEmailVerificationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
