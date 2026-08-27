@@ -26,6 +26,20 @@ public sealed class SmtpEmailSender(IOptions<SmtpOptions> options, ILogger<SmtpE
         return SendAsync(toEmail, "Verify your email address", body, cancellationToken);
     }
 
+    public Task SendDuplicateRegistrationAttemptAsync(
+        string toEmail, string recipientName, CancellationToken cancellationToken = default)
+    {
+        var body = $"""
+            <p>Hi {recipientName},</p>
+            <p>Someone just tried to sign up for Subscription Tracker using this email address, but you already
+            have an account here.</p>
+            <p>If this was you, just sign in normally - or use "Forgot password" if you don't remember your
+            password. If it wasn't you, no action is needed; your account has not been changed.</p>
+            """;
+
+        return SendAsync(toEmail, "Sign-up attempt on your existing account", body, cancellationToken);
+    }
+
     public Task SendPasswordResetAsync(
         string toEmail, string recipientName, Guid userId, string resetToken, CancellationToken cancellationToken = default)
     {
