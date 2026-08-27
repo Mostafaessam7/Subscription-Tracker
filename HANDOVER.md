@@ -2,6 +2,16 @@
 
 **Read this file first if you are a new session continuing this project.** It contains everything needed to resume without re-deriving context.
 
+**Archive note (added on review, 2026-08-27)**: this copy (`D:\Projects\All\2-Subscription Tracker`) sits alongside a
+separately-numbered `D:\Projects\3-Subscription Tracker`, which reorganizes the same product into
+`CleanArch-updated/` (backend) + `subscription-tracker-app/` (frontend) and has continued past this copy's history
+with its own later work — a `GAPS.md` gap-closure log, security response headers + HSTS, an Angular 18→22 upgrade,
+Playwright E2E tests, route-level lazy loading, CODEOWNERS/issue-and-PR templates, and account-deletion/
+email-confirmation flows that don't exist in this codebase. This document's own commit history is genuinely
+extensive and internally consistent (see below), but that reflects work done *on this earlier iteration* — before
+concluding this is the project's current state, check whether `3-Subscription Tracker` is the one actually being
+developed further.
+
 **GitHub**: [github.com/Mostafaessam7/Subscription-Tracker](https://github.com/Mostafaessam7/Subscription-Tracker)
 
 Last updated: 2026-08-27. The project is feature-complete against every originally-scoped milestone, every stretch item flagged along the way, and a full enterprise-readiness audit performed on 2026-07-29 and closed out on 2026-08-03 (workspace switcher, tenant isolation, custom role builder, system admin, in-app notifications, renewal calendar, PDF export, invite-by-email for unregistered users, expanded test coverage, OpenTelemetry). A 2026-08-13 session then closed out **every remaining item** from the previous "further improvement" backlog — see §2d for the full list (LICENSE, CI pipeline, Docker finally build-verified end-to-end, a dashboard KPI aggregate endpoint, multi-currency budget support, Azure Blob Storage for attachments, live proof the SignalR push fires from a real cron trigger, and a persistent SQL Server-backed Quartz job store), then applied 8 code-review findings plus a CSV-injection security fix from that same session's diff (§5). A 2026-08-14 unprompted cleanup pass fixed a CSV formula-injection vulnerability and an N+1 query. A 2026-08-21 session added subtle Mecodex agency branding (favicon + "Powered by" credit, §4 Frontend) and fixed a user-reported logout bug (§5) plus added the shell component's first test coverage. A 2026-08-26 session then closed out a self-identified (not user-reported) list of hardening items — see §2e: refresh-token reuse detection, 2FA recovery codes, dashboard query scaling, and a soft-delete purge job — followed immediately by one more self-identified fix, an endpoint-specific rate limit on login/register (§2f). A 2026-08-27 session then cleared 4 known CVEs in transitive frontend dev-dependencies via `npm audit fix` (§2g), then made `/auth/register` account-non-enumerable at the user's explicit request after a prior session had flagged it as a judgment call (§2h). As of this session there is no remaining backlog item — new work should come from an explicit user ask. See §2 for what's implemented and §6/§7 for the (now very short) list of anything still genuinely open.

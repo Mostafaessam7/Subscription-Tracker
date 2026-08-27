@@ -6,6 +6,14 @@ overspend alerts, manage a shared workspace with teammates, and export reports �
 
 **GitHub**: [github.com/Mostafaessam7/Subscription-Tracker](https://github.com/Mostafaessam7/Subscription-Tracker)
 
+> **Archive note**: this copy lives under `D:\Projects\All\` alongside a separately-numbered
+> `D:\Projects\3-Subscription Tracker`, which restructures the same product into a `CleanArch-updated/` (backend) +
+> `subscription-tracker-app/` (frontend) layout and has since accumulated its own, later gap-closure history
+> (security headers middleware, an Angular 18→22 upgrade path, Playwright E2E tests, CODEOWNERS/issue templates,
+> account-deletion + email-confirmation flows not present here). Treat **this** folder as an earlier/parallel
+> iteration of the project, not the actively-developed one — check `3-Subscription Tracker` first unless you have a
+> specific reason to work from this copy.
+
 > Looking for deep architectural detail, known gotchas, the full feature-by-feature build history, or what's
 > genuinely still left to do? See [HANDOVER.md](HANDOVER.md) — it's the working document for anyone (human or AI)
 > picking up development on this codebase. This README is a lighter-weight orientation for a first-time human
