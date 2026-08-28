@@ -27,6 +27,23 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release --logger "console;verbosity=normal"
 
+      # Detects a finding rather than the absence of a reassuring string: the command
+      # prints one line per project, so checking for "has no vulnerable packages" would
+      # be satisfied by any single clean project even when another reports advisories.
+      # `dotnet list package --vulnerable` also exits 0 either way, so its output is the
+      # only signal available. Both the backend and the client are clean as of this
+      # change, so this went in green rather than immediately red.
+      - name: Check for vulnerable NuGet packages
+        shell: bash
+        run: |
+          report=$(dotnet list package --vulnerable --include-transitive 2>&1)
+          echo "$report"
+          if echo "$report" | grep -q "has the following vulnerable packages"; then
+            echo "::error::Vulnerable NuGet packages found (see the table above)."
+            exit 1
+          fi
+          echo "No vulnerable packages found."
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -50,3 +67,8 @@ jobs:
 
       - name: Build
         run: npx ng build
+
+      # High/Critical only: a moderate transitive advisory in build-only tooling
+      # shouldn't block every PR when there's no one triaging lower severities.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
