@@ -6,6 +6,8 @@ overspend alerts, manage a shared workspace with teammates, and export reports �
 
 **GitHub**: [github.com/Mostafaessam7/Subscription-Tracker](https://github.com/Mostafaessam7/Subscription-Tracker)
 
+> **⚠️ ARCHIVED — see [PROJECT-STATUS.md](PROJECT-STATUS.md) before doing anything here.**
+>
 > **Archive note**: this copy lives under `D:\Projects\All\` alongside a separately-numbered
 > `D:\Projects\3-Subscription Tracker`, which restructures the same product into a `CleanArch-updated/` (backend) +
 > `subscription-tracker-app/` (frontend) layout and has since accumulated its own, later gap-closure history
