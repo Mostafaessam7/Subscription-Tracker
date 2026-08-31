@@ -15,14 +15,21 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((_, configBuilder) =>
-        {
-            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:SubscriptionTrackerDb"] =
-                    $"Server=(localdb)\\mssqllocaldb;Database={_databaseName};Trusted_Connection=True;MultipleActiveResultSets=true",
-            });
-        });
+        // UseSetting rather than ConfigureAppConfiguration, and the difference is not cosmetic.
+        //
+        // ConfigureAppConfiguration callbacks are applied while the host is being built — after
+        // Program.cs has already run AddInfrastructure(builder.Configuration). Quartz reads the
+        // connection string eagerly there and closes over it, so the override arrived too late for
+        // the scheduler: EF Core used the per-test database while Quartz used the one named in
+        // appsettings. UseSetting writes into host configuration early enough for both to see it.
+        //
+        // These tests passed locally only because a "SubscriptionTracker" database already existed
+        // from earlier runs. On a clean machine the scheduler failed schema validation during
+        // startup with SQL error 4060 and took every integration test down with it. They were
+        // never self-contained; a fresh CI runner is what made that visible.
+        builder.UseSetting(
+            "ConnectionStrings:SubscriptionTrackerDb",
+            $"Server=(localdb)\\mssqllocaldb;Database={_databaseName};Trusted_Connection=True;MultipleActiveResultSets=true");
 
         builder.ConfigureServices(services =>
         {
