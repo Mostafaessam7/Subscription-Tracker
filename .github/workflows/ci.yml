@@ -66,7 +66,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Angular 22's CLI requires Node >= 22.22.3; "20" failed with exit code 3 and the message
+          # "The Angular CLI requires a minimum Node.js version". Tracks the latest 22.x rather
+          # than pinning a patch, since the CLI states a minimum. Same fix as the active repo.
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: client/package-lock.json
 
