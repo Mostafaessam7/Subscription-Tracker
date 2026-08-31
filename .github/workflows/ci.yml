@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Angular 22's CLI requires Node >= 22.22.3; "20" failed with exit code 3 and the message
           # "The Angular CLI requires a minimum Node.js version". Tracks the latest 22.x rather
