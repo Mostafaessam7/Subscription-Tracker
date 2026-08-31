@@ -18,6 +18,17 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # LocalDB is installed on the windows runner image but its default instance is not running,
+      # so every integration test failed with SQL error 4060 ("cannot open database") -- which
+      # reads like a missing database rather than a stopped server. The same tests pass locally,
+      # which is what identified this as an environment gap rather than a code fault.
+      - name: Start SQL Server LocalDB
+        shell: pwsh
+        run: |
+          sqllocaldb create MSSQLLocalDB -s 2>$null
+          sqllocaldb start MSSQLLocalDB
+          sqllocaldb info MSSQLLocalDB
+
       - name: Restore
         run: dotnet restore
 
