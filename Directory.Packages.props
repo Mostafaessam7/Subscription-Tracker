@@ -61,7 +61,7 @@
     <PackageVersion Include="Mapster" Version="7.4.0" />
 
     <!-- Reports export (.xlsx generation) -->
-    <PackageVersion Include="ClosedXML" Version="0.104.2" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <!-- Reports export (PDF generation) -->
     <PackageVersion Include="QuestPDF" Version="2024.10.3" />
 
