@@ -11,7 +11,7 @@ jobs:
     # Integration tests target SQL Server LocalDB, which only ships on the Windows runner image.
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v4
@@ -61,7 +61,7 @@ jobs:
       run:
         working-directory: client
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
