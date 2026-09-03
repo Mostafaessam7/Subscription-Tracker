@@ -69,7 +69,7 @@
     <PackageVersion Include="MailKit" Version="4.17.0" />
 
     <!-- Blob storage (optional attachment backend, see FileStorage:Provider) -->
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
 
     <!-- Testing -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
