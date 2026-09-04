@@ -88,3 +88,16 @@ which is more developed here than in the active copy.
 |---|---|
 | **All of it** | The project is archived. Applying security, design-system, or infrastructure work here would be maintaining two copies of one product — the exact cost the archive decision was meant to avoid |
 | **Deleting the repo** | It builds clean, passes 223 tests, and holds a more developed workspace/roles model than the active copy. Worth keeping as a reference; clearly labelled so nobody works in it by mistake |
+
+---
+
+## Update 2026-09-04 — CI audit step hardened
+
+One exception to the "no further work here" rule above, because it is a CI-correctness fix rather
+than product work: the frontend `npm audit` step could not tell "found a vulnerability" from
+"could not reach the npm registry", and a burst of 503s from npm's audit endpoint on 2026-09-04
+failed dependency PRs across the workspace as if they carried advisories.
+
+The step now retries the transport, still fails hard on a real High/Critical finding, and warns
+loudly that the audit did not run if the registry stays unreachable. Applied identically here and
+in the active projects so the archived copy does not become the one with a different CI contract.
